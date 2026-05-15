@@ -4,6 +4,11 @@ import {
   useFormContext,
 } from "react-hook-form";
 
+import {
+  Building2,
+  BriefcaseBusiness,
+} from "lucide-react";
+
 const inputClass =
   "w-full bg-[#282828] border border-[#3a3a3a] rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-[#1DB954] transition-colors placeholder-[#5a5a5a]";
 
@@ -195,20 +200,29 @@ function Step5Employment() {
       {/* Employment Toggle */}
       <div className="flex gap-3 mb-6">
 
-        {[
-          {
-            value:
-              "salaried",
-            label:
-              "🏢 Salaried",
-          },
-          {
-            value:
-              "self-employed",
-            label:
-              "💼 Self-employed",
-          },
-        ].map((t) => (
+       {[
+  {
+    value: "salaried",
+    label: (
+      <div className="flex items-center gap-2 justify-center">
+        <Building2 size={18} />
+        <span>Salaried</span>
+      </div>
+    ),
+  },
+
+  {
+    value: "self-employed",
+    label: (
+      <div className="flex items-center gap-2 justify-center">
+        <BriefcaseBusiness size={18} />
+        <span>Self-employed</span>
+      </div>
+    ),
+  },
+
+
+].map((t) => (
           <button
             type="button"
             key={t.value}

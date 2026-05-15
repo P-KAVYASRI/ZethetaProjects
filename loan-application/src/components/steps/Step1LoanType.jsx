@@ -4,61 +4,109 @@ import {
   useFormContext,
 } from "react-hook-form";
 
+import {
+  House,
+  User,
+  Car,
+  GraduationCap,
+  Briefcase,
+  Gem,
+} from "lucide-react";
+
+{/* Intro */}
+<div className="mb-8">
+
+  <div className="inline-flex items-center gap-2 bg-[#1DB954]/10 border border-[#1DB954]/20 px-4 py-1 rounded-full mb-4">
+
+    <span className="text-[#1DB954] text-xs font-semibold tracking-wider uppercase">
+      Smart Loan Journey
+    </span>
+
+  </div>
+
+  <h2 className="text-4xl font-bold text-white leading-tight mb-3">
+
+    Find the perfect loan
+
+    <span className="text-[#1DB954]">
+      {" "}
+      for your needs
+    </span>
+
+  </h2>
+
+  <p className="text-[#b3b3b3] max-w-2xl leading-relaxed">
+
+    Choose your preferred loan type
+    and configure repayment
+    options.
+
+  </p>
+
+</div>
+
 const loanTypes = [
+
   {
     id: "home",
-    icon: "🏠",
+    icon: <House color="#81d5a9" size={28} />,
     label: "Home loan",
     min: 500000,
     max: 10000000,
     tenures: [60, 120, 180, 240, 300],
     badge: "Property documents required in later steps",
   },
+
   {
     id: "personal",
-    icon: "👤",
+    icon: <User color="#81d5a9" size={28} />,
     label: "Personal loan",
     min: 50000,
     max: 1000000,
     tenures: [6, 12, 24, 36, 48],
     badge: "No collateral needed — quick approval",
   },
+
   {
     id: "car",
-    icon: "🚗",
+    icon: <Car color="#81d5a9" size={28} />,
     label: "Car loan",
     min: 100000,
     max: 5000000,
     tenures: [12, 24, 36, 48, 60],
     badge: "Vehicle RC & insurance needed later",
   },
+
   {
     id: "education",
-    icon: "🎓",
+    icon: <GraduationCap color="#81d5a9" size={28} />,
     label: "Education loan",
     min: 50000,
     max: 2000000,
     tenures: [24, 60, 84, 120],
     badge: "Admission letter required in later steps",
   },
+
   {
     id: "business",
-    icon: "💼",
+    icon: <Briefcase color="#81d5a9" size={28} />,
     label: "Business loan",
     min: 500000,
     max: 20000000,
     tenures: [12, 24, 36, 48, 60],
     badge: "Business registration docs needed later",
   },
+
   {
     id: "gold",
-    icon: "💎",
+    icon: <Gem color="#81d5a9" size={28} />,
     label: "Gold loan",
     min: 10000,
     max: 2500000,
     tenures: [3, 6, 12, 18, 24],
     badge: "Gold valuation done at branch visit",
   },
+
 ];
 
 const purposeOptions = [
