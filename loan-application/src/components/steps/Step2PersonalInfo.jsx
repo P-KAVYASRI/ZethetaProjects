@@ -1,20 +1,39 @@
-import { useState } from "react";
-
 import {
   useFormContext,
 } from "react-hook-form";
 
 const genderOptions = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "other", label: "Other" },
+  {
+    value: "male",
+    label: "Male",
+  },
+  {
+    value: "female",
+    label: "Female",
+  },
+  {
+    value: "other",
+    label: "Other",
+  },
 ];
 
 const maritalOptions = [
-  { value: "single", label: "Single" },
-  { value: "married", label: "Married" },
-  { value: "divorced", label: "Divorced" },
-  { value: "widowed", label: "Widowed" },
+  {
+    value: "single",
+    label: "Single",
+  },
+  {
+    value: "married",
+    label: "Married",
+  },
+  {
+    value: "divorced",
+    label: "Divorced",
+  },
+  {
+    value: "widowed",
+    label: "Widowed",
+  },
 ];
 
 const inputClass =
@@ -26,8 +45,12 @@ const errorClass =
 const labelClass =
   "block text-xs text-[#b3b3b3] mb-2";
 
-function FieldError({ message }) {
-  if (!message) return null;
+function FieldError({
+  message,
+}) {
+
+  if (!message)
+    return null;
 
   return (
     <p className={errorClass}>
@@ -38,26 +61,46 @@ function FieldError({ message }) {
 
 function Step2PersonalInfo() {
 
-  const [selectedGender, setSelectedGender] =
-    useState("");
-
-  const [
-    selectedMarital,
-    setSelectedMarital,
-  ] = useState("");
-
   const {
     register,
     setValue,
-    formState: { errors },
+    watch,
+    formState: {
+      errors,
+    },
   } = useFormContext();
+
+  // RHF VALUES
+  const selectedGender =
+    watch("gender");
+
+  const selectedMarital =
+    watch(
+      "maritalStatus"
+    );
 
   return (
     <div>
 
+      {/* Hidden Fields */}
+      <input
+        type="hidden"
+        {...register(
+          "gender"
+        )}
+      />
+
+      <input
+        type="hidden"
+        {...register(
+          "maritalStatus"
+        )}
+      />
+
       {/* Name Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
 
+        {/* First Name */}
         <div>
 
           <label className={labelClass}>
@@ -65,19 +108,24 @@ function Step2PersonalInfo() {
           </label>
 
           <input
-            {...register("firstName")}
+            defaultValue=""
+            {...register(
+              "firstName"
+            )}
             placeholder="Kavya"
             className={inputClass}
           />
 
           <FieldError
             message={
-              errors.firstName?.message
+              errors.firstName
+                ?.message
             }
           />
 
         </div>
 
+        {/* Last Name */}
         <div>
 
           <label className={labelClass}>
@@ -85,14 +133,18 @@ function Step2PersonalInfo() {
           </label>
 
           <input
-            {...register("lastName")}
+            defaultValue=""
+            {...register(
+              "lastName"
+            )}
             placeholder="Mishra"
             className={inputClass}
           />
 
           <FieldError
             message={
-              errors.lastName?.message
+              errors.lastName
+                ?.message
             }
           />
 
@@ -114,13 +166,17 @@ function Step2PersonalInfo() {
         </label>
 
         <input
+          defaultValue=""
           {...register("dob")}
           type="date"
           className={inputClass}
         />
 
         <FieldError
-          message={errors.dob?.message}
+          message={
+            errors.dob
+              ?.message
+          }
         />
 
       </div>
@@ -134,37 +190,42 @@ function Step2PersonalInfo() {
 
         <div className="flex gap-3 flex-wrap">
 
-          {genderOptions.map((g) => (
-            <button
-              type="button"
-              key={g.value}
-              onClick={() => {
-                setSelectedGender(
-                  g.value
-                );
+          {genderOptions.map(
+            (g) => (
+              <button
+                type="button"
+                key={g.value}
+                onClick={() => {
 
-                setValue(
-                  "gender",
+                  setValue(
+                    "gender",
+                    g.value,
+                    {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: true,
+                    }
+                  );
+                }}
+                className={`px-5 py-2 rounded-full text-xs border transition-all duration-200
+                ${
+                  selectedGender ===
                   g.value
-                );
-              }}
-              className={`px-5 py-2 rounded-full text-xs border transition-all duration-200
-              ${
-                selectedGender ===
-                g.value
-                  ? "border-[#1DB954] bg-[#1DB954]/15 text-[#1DB954] font-semibold"
-                  : "border-[#3a3a3a] text-[#b3b3b3] hover:border-[#1DB954]"
-              }`}
-            >
-              {g.label}
-            </button>
-          ))}
+                    ? "border-[#1DB954] bg-[#1DB954]/15 text-[#1DB954] font-semibold"
+                    : "border-[#3a3a3a] text-[#b3b3b3] hover:border-[#1DB954]"
+                }`}
+              >
+                {g.label}
+              </button>
+            )
+          )}
 
         </div>
 
         <FieldError
           message={
-            errors.gender?.message
+            errors.gender
+              ?.message
           }
         />
 
@@ -179,37 +240,42 @@ function Step2PersonalInfo() {
 
         <div className="flex gap-3 flex-wrap">
 
-          {maritalOptions.map((m) => (
-            <button
-              type="button"
-              key={m.value}
-              onClick={() => {
-                setSelectedMarital(
-                  m.value
-                );
+          {maritalOptions.map(
+            (m) => (
+              <button
+                type="button"
+                key={m.value}
+                onClick={() => {
 
-                setValue(
-                  "maritalStatus",
+                  setValue(
+                    "maritalStatus",
+                    m.value,
+                    {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: true,
+                    }
+                  );
+                }}
+                className={`px-5 py-2 rounded-full text-xs border transition-all duration-200
+                ${
+                  selectedMarital ===
                   m.value
-                );
-              }}
-              className={`px-5 py-2 rounded-full text-xs border transition-all duration-200
-              ${
-                selectedMarital ===
-                m.value
-                  ? "border-[#1DB954] bg-[#1DB954]/15 text-[#1DB954] font-semibold"
-                  : "border-[#3a3a3a] text-[#b3b3b3] hover:border-[#1DB954]"
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
+                    ? "border-[#1DB954] bg-[#1DB954]/15 text-[#1DB954] font-semibold"
+                    : "border-[#3a3a3a] text-[#b3b3b3] hover:border-[#1DB954]"
+                }`}
+              >
+                {m.label}
+              </button>
+            )
+          )}
 
         </div>
 
         <FieldError
           message={
-            errors.maritalStatus
+            errors
+              .maritalStatus
               ?.message
           }
         />
@@ -219,6 +285,7 @@ function Step2PersonalInfo() {
       {/* Phone + Email */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
 
+        {/* Phone */}
         <div>
 
           <label className={labelClass}>
@@ -232,7 +299,10 @@ function Step2PersonalInfo() {
             </span>
 
             <input
-              {...register("phone")}
+              defaultValue=""
+              {...register(
+                "phone"
+              )}
               type="tel"
               placeholder="9876543210"
               maxLength={10}
@@ -243,12 +313,14 @@ function Step2PersonalInfo() {
 
           <FieldError
             message={
-              errors.phone?.message
+              errors.phone
+                ?.message
             }
           />
 
         </div>
 
+        {/* Email */}
         <div>
 
           <label className={labelClass}>
@@ -256,7 +328,10 @@ function Step2PersonalInfo() {
           </label>
 
           <input
-            {...register("email")}
+            defaultValue=""
+            {...register(
+              "email"
+            )}
             type="email"
             placeholder="kavya@example.com"
             className={inputClass}
@@ -264,7 +339,8 @@ function Step2PersonalInfo() {
 
           <FieldError
             message={
-              errors.email?.message
+              errors.email
+                ?.message
             }
           />
 

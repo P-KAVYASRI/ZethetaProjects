@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 
 import {
@@ -5,6 +6,12 @@ import {
   FormProvider,
 } from "react-hook-form";
 
+import { step1Schema } from "../../schemas/step1Schema";
+import { step2Schema } from "../../schemas/step2Schema";
+import { step3Schema } from "../../schemas/step3Schema";
+import { step4Schema } from "../../schemas/step4Schema";
+import { step5Schema } from "../../schemas/step5Schema";
+import { step6Schema } from "../../schemas/step6Schema";
 import Step1LoanDetails from "../steps/Step1LoanType";
 import Step2PersonalInfo from "../steps/Step2PersonalInfo";
 import Step3KYC from "../steps/Step3KYC";
@@ -13,6 +20,15 @@ import Step5Employment from "../steps/Step5Employment";
 import Step6CoApplicant from "../steps/Step6CoApplicant";
 import Step7Documents from "../steps/Step7Documents";
 import Step8Review from "../steps/Step8Review";
+
+const stepSchemas = [
+  step1Schema,
+  step2Schema,
+  step3Schema,
+  step4Schema,
+  step5Schema,
+  step6Schema,
+];
 
 const stepLabels = [
   "Loan Details",
@@ -26,65 +42,132 @@ const stepLabels = [
 ];
 
 function WizardForm() {
+
   const [currentStep, setCurrentStep] =
     useState(0);
 
-  const totalSteps = stepLabels.length;
-
-  // React Hook Form
   const methods = useForm({
+
+    resolver: zodResolver(
+    stepSchemas[currentStep] || step1Schema
+  ),
+    mode: "onChange",
+
+    // IMPORTANT FIX
+    shouldUnregister: false,
+
     defaultValues: {
+
+      // Step1
       loanType: "",
       amount: 500000,
       tenure: "",
       purpose: "",
       referral: "",
 
+      // Step2
       firstName: "",
       lastName: "",
+      dob: "",
+      gender: "",
+      maritalStatus: "",
       phone: "",
       email: "",
+
+      // Step3
+      pan: "",
+      aadhaar: "",
+      voterId: "",
+      passport: "",
+
+      // Step4
+      addressLine1: "",
+      addressLine2: "",
+      pinCode: "",
+      city: "",
+      state: "",
+
+      // Step5
+      employmentType: "",
+      companyName: "",
+      designation: "",
+
+      // Step6
+      coName: "",
+      coRelation: "",
+
+      // Step7
+      documents: {},
+      signature: null,
+
     },
+
   });
 
+  const totalSteps =
+    stepLabels.length;
+
   const nextStep = () => {
-    if (currentStep < totalSteps - 1) {
+
+    if (
+      currentStep <
+      totalSteps - 1
+    ) {
+
       setCurrentStep(
-        currentStep + 1
+        (prev) => prev + 1
       );
     }
   };
 
   const prevStep = () => {
+
     if (currentStep > 0) {
+
       setCurrentStep(
-        currentStep - 1
+        (prev) => prev - 1
       );
     }
   };
 
   const renderStep = () => {
+
     switch (currentStep) {
+
       case 0:
-        return <Step1LoanDetails />;
+        return (
+          <Step1LoanDetails />
+        );
 
       case 1:
-        return <Step2PersonalInfo />;
+        return (
+          <Step2PersonalInfo />
+        );
 
       case 2:
-        return <Step3KYC />;
+        return (
+          <Step3KYC />
+        );
 
       case 3:
-        return <Step4Address />;
+        return (
+          <Step4Address />
+        );
 
       case 4:
-        return <Step5Employment />;
+        return (
+          <Step5Employment />
+        );
 
       case 5:
-        return <Step6CoApplicant />;
+        return (
+          <Step6CoApplicant />
+        );
 
       case 6:
-        return <Step7Documents />;
+        return (
+          <Step7Documents />
+        );
 
       case 7:
         return (
@@ -103,29 +186,6 @@ function WizardForm() {
 
         <div className="w-full max-w-5xl bg-[#121212] rounded-3xl overflow-hidden border border-[#2a2a2a] shadow-2xl">
 
-          {/* Navbar */}
-          <div className="flex items-center justify-between px-8 py-5 border-b border-[#2a2a2a] bg-[#181818]">
-
-            <div className="flex items-center gap-3">
-
-              <div className="w-11 h-11 rounded-2xl bg-[#1DB954] flex items-center justify-center text-black font-bold text-xl">
-                ₹
-              </div>
-
-              <div>
-                <h2 className="text-white font-semibold text-lg">
-                  Zetheta Finance
-                </h2>
-
-                <p className="text-[#7a7a7a] text-xs">
-                  Secure Digital Loan Platform
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
           {/* Header */}
           <div
             className="p-8"
@@ -140,8 +200,9 @@ function WizardForm() {
             </h1>
 
             <p className="mt-2 text-sm text-white/80">
-              Complete your application
-              in simple steps
+              Complete your
+              application in simple
+              steps
             </p>
 
             {/* Progress */}
@@ -163,7 +224,8 @@ function WizardForm() {
 
               </div>
 
-              <div className="flex justify-between mt-3">
+              {/* Labels */}
+              <div className="flex justify-between mt-3 flex-wrap gap-2">
 
                 {stepLabels.map(
                   (
@@ -173,14 +235,14 @@ function WizardForm() {
                     <span
                       key={index}
                       className={`text-xs font-semibold
-                    ${
-                      index ===
-                      currentStep
-                        ? "text-white"
-                        : "text-white/40"
-                    }`}
+                      ${
+                        index ===
+                        currentStep
+                          ? "text-white"
+                          : "text-white/40"
+                      }`}
                     >
-                      {label}
+                      | {label} |
                     </span>
                   )
                 )}
@@ -197,13 +259,21 @@ function WizardForm() {
             <p className="text-[#1DB954] text-xs font-semibold uppercase tracking-[3px] mb-6">
 
               Step{" "}
-              {currentStep + 1} of{" "}
-              {totalSteps} —{" "}
+              {currentStep + 1}
+
+              {" "}of{" "}
+
+              {totalSteps}
+
+              {" — | "}
+
               {
                 stepLabels[
                   currentStep
                 ]
               }
+
+              {" |"}
 
             </p>
 
@@ -231,16 +301,26 @@ function WizardForm() {
             </button>
 
             <span className="text-xs text-[#b3b3b3]">
+
               Step{" "}
+
               <span className="text-[#1DB954] font-semibold">
+
                 {currentStep + 1}
-              </span>{" "}
-              of {totalSteps}
+
+              </span>
+
+              {" "}of{" "}
+
+              {totalSteps}
+
             </span>
 
             <button
               type="button"
-              onClick={nextStep}
+              onClick={() => {
+                nextStep();
+              }}
               className="bg-[#1DB954] hover:bg-[#1ed760] text-black px-6 py-3 rounded-full text-sm font-semibold cursor-pointer relative z-50"
             >
               Next Step →

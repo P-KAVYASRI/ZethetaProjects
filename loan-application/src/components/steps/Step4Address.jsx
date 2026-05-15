@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   useFormContext,
 } from "react-hook-form";
+import { z } from "zod";
 
 const addressSchema = z.object({
   addressLine1: z.string().min(5, "Address must be at least 5 characters"),

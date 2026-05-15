@@ -1,14 +1,126 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 
 import {
   useFormContext,
 } from "react-hook-form";
 
-function Step8Review() {
+const interestRates = {
+  home: 8.5,
+  personal: 12,
+  car: 9,
+  education: 10,
+  business: 14,
+  gold: 11,
+};
 
-  const {
-    getValues,
-  } = useFormContext();
+const loanIcons = {
+  home: "🏠",
+  personal: "👤",
+  car: "🚗",
+  education: "🎓",
+  business: "💼",
+  gold: "✨",
+};
+
+function formatINR(value) {
+  return "₹" + Number(value).toLocaleString("en-IN", {
+    maximumFractionDigits: 0,
+  });
+}
+
+function AnimatedNumber({
+  value,
+  prefix = "",
+  suffix = "",
+  duration = 800,
+}) {
+
+  const [display, setDisplay] =
+    useState(0);
+
+  const startRef =
+    useRef(null);
+
+  const rafRef =
+    useRef(null);
+
+  useEffect(() => {
+
+    const target =
+      Number(value);
+
+    const start =
+      Date.now();
+
+    startRef.current =
+      start;
+
+    const tick = () => {
+
+      const elapsed =
+        Date.now() -
+        start;
+
+      const progress =
+        Math.min(
+          elapsed /
+            duration,
+          1
+        );
+
+      const eased =
+        1 -
+        Math.pow(
+          1 - progress,
+          3
+        );
+
+      setDisplay(
+        Math.round(
+          eased * target
+        )
+      );
+
+      if (
+        progress < 1
+      ) {
+        rafRef.current =
+          requestAnimationFrame(
+            tick
+          );
+      }
+    };
+
+    rafRef.current =
+      requestAnimationFrame(
+        tick
+      );
+
+    return () =>
+      cancelAnimationFrame(
+        rafRef.current
+      );
+
+  }, [value, duration]);
+
+  return (
+    <span>
+      {prefix}
+
+      {display.toLocaleString(
+        "en-IN"
+      )}
+
+      {suffix}
+    </span>
+  );
+}
+
+export default function Step8Review() {
+
+  // IMPORTANT FIX
+  const { getValues } =
+    useFormContext();
 
   const formData =
     getValues();
@@ -20,7 +132,7 @@ function Step8Review() {
 
   const [
     agreeCreditCheck,
-    setAgreeCreditCheck,
+    setAgreeeCreditCheck,
   ] = useState(false);
 
   const [
@@ -28,346 +140,456 @@ function Step8Review() {
     setSubmitted,
   ] = useState(false);
 
-  // Loan Details
-  const loanAmount = Number(
-    formData.amount || 500000
-  );
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
 
-  const tenureMonths = Number(
-    formData.tenure || 60
-  );
+  const [
+    errors,
+    setErrors,
+  ] = useState({});
 
-  // Interest rates
-  const interestRates = {
-    home: 8.5,
-    personal: 12,
-    car: 9,
-    education: 10,
-    business: 14,
-    gold: 11,
-  };
+  const [
+    mounted,
+    setMounted,
+  ] = useState(false);
+
+  useEffect(() => {
+    setTimeout(
+      () =>
+        setMounted(
+          true
+        ),
+      50
+    );
+  }, []);
+
+  const loanAmount =
+    Number(
+      formData.amount ||
+        500000
+    );
+
+  const tenureMonths =
+    Number(
+      formData.tenure ||
+        60
+    );
 
   const interestRate =
     interestRates[
       formData.loanType
     ] || 10;
 
-  // EMI Calculation
-  const emi = useMemo(() => {
+  const emi =
+    useMemo(() => {
 
-    const monthlyRate =
-      interestRate / 12 / 100;
+      const r =
+        interestRate /
+        12 /
+        100;
 
-    const emiValue =
-      (loanAmount *
-        monthlyRate *
-        Math.pow(
-          1 + monthlyRate,
+      const val =
+        (loanAmount *
+          r *
+          Math.pow(
+            1 + r,
+            tenureMonths
+          )) /
+        (Math.pow(
+          1 + r,
           tenureMonths
-        )) /
-      (Math.pow(
-        1 + monthlyRate,
-        tenureMonths
-      ) -
-        1);
+        ) -
+          1);
 
-    return isFinite(emiValue)
-      ? emiValue.toFixed(0)
-      : 0;
+      return isFinite(val)
+        ? Math.round(
+            val
+          )
+        : 0;
 
-  }, [
-    loanAmount,
-    tenureMonths,
-    interestRate,
-  ]);
+    }, [
+      loanAmount,
+      tenureMonths,
+      interestRate,
+    ]);
 
   const totalPayment =
-    Number(emi) *
+    emi *
     tenureMonths;
 
   const totalInterest =
     totalPayment -
     loanAmount;
 
-  const formatINR = (
-    value
-  ) =>
-    "₹" +
-    Number(value).toLocaleString(
-      "en-IN"
-    );
+  const handleSubmit =
+    () => {
 
-  const handleSubmit = () => {
+      const newErrors =
+        {};
 
-    if (
-      !agreeTerms ||
-      !agreeCreditCheck
-    ) {
+      if (
+        !agreeTerms
+      ) {
+        newErrors.terms =
+          true;
+      }
 
-      alert(
-        "Please accept all consent checkboxes."
+      if (
+        !agreeCreditCheck
+      ) {
+        newErrors.credit =
+          true;
+      }
+
+      if (
+        Object.keys(
+          newErrors
+        ).length > 0
+      ) {
+
+        setErrors(
+          newErrors
+        );
+
+        return;
+      }
+
+      setSubmitting(
+        true
       );
 
-      return;
-    }
+      setTimeout(() => {
 
-    console.log(
-      "FINAL FORM DATA:",
-      formData
+        setSubmitting(
+          false
+        );
+
+        setSubmitted(
+          true
+        );
+
+      }, 1800);
+    };
+
+  if (submitted) {
+
+    return (
+      <div className="text-center text-white text-3xl py-20">
+        🎉 Application Submitted Successfully
+      </div>
     );
-
-    setSubmitted(true);
-  };
+  }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div
+      style={{
+        maxWidth: 680,
+        margin:
+          "0 auto",
+        opacity:
+          mounted
+            ? 1
+            : 0,
+        transition:
+          "opacity 0.3s ease",
+      }}
+    >
 
-      {/* Header */}
-      <div className="mb-8">
+      {/* HEADER */}
+      <div
+        style={{
+          marginBottom:
+            32,
+        }}
+      >
 
-        <div className="inline-flex items-center gap-2 bg-[#1DB954]/10 border border-[#1DB954]/20 px-4 py-1 rounded-full mb-4">
-
-          <span className="text-[#1DB954] text-xs font-semibold tracking-wider uppercase">
-            Final Verification
-          </span>
-
-        </div>
-
-        <h2 className="text-4xl font-bold text-white mb-3">
-          Review & Submit
+        <h2
+          style={{
+            fontSize: 32,
+            fontWeight: 700,
+            color:
+              "#fff",
+          }}
+        >
+          Review &
+          Submit
         </h2>
 
-        <p className="text-[#b3b3b3] max-w-2xl">
-          Carefully review all your
-          details before submitting
-          your loan application.
-        </p>
-
       </div>
 
-      {/* Loan Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      {/* DETAILS */}
+      <div
+        style={{
+          background:
+            "#111",
+          border:
+            "1px solid #222",
+          borderRadius:
+            20,
+          padding:
+            "24px 28px",
+          marginBottom:
+            16,
+        }}
+      >
 
-        <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl p-5">
+        <h3
+          style={{
+            color:
+              "#fff",
+            marginBottom:
+              20,
+          }}
+        >
+          Personal
+          Information
+        </h3>
 
-          <p className="text-[#7a7a7a] text-xs mb-2">
-            Loan Amount
-          </p>
-
-          <h3 className="text-2xl font-bold text-white">
-            {formatINR(
-              loanAmount
-            )}
-          </h3>
-
-        </div>
-
-        <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl p-5">
-
-          <p className="text-[#7a7a7a] text-xs mb-2">
-            Estimated EMI
-          </p>
-
-          <h3 className="text-2xl font-bold text-[#1DB954]">
-
-            {formatINR(emi)}
-
-          </h3>
-
-          <p className="text-xs text-[#7a7a7a] mt-1">
-            per month
-          </p>
-
-        </div>
-
-        <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl p-5">
-
-          <p className="text-[#7a7a7a] text-xs mb-2">
-            Interest Rate
-          </p>
-
-          <h3 className="text-2xl font-bold text-white">
-            {interestRate}%
-          </h3>
-
-        </div>
-
-      </div>
-
-      {/* Summary */}
-      <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-3xl p-6 mb-8">
-
-        <div className="flex items-center justify-between mb-6">
-
-          <h3 className="text-xl font-semibold text-white">
-            Application Summary
-          </h3>
-
-          <button
-            type="button"
-            className="text-[#1DB954] text-sm hover:underline"
-          >
-            Edit Details
-          </button>
-
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div
+          style={{
+            display:
+              "grid",
+            gridTemplateColumns:
+              "1fr 1fr",
+            gap:
+              "16px 24px",
+          }}
+        >
 
           <div>
-
-            <p className="text-[#7a7a7a] text-xs mb-1">
+            <p
+              style={{
+                color:
+                  "#666",
+              }}
+            >
               Full Name
             </p>
 
-            <p className="text-white">
-
-              {formData.firstName ||
-                "-"}
-
-              {" "}
-
-              {formData.lastName ||
-                ""}
-
+            <p
+              style={{
+                color:
+                  "#fff",
+              }}
+            >
+              {
+                formData.firstName
+              }{" "}
+              {
+                formData.lastName
+              }
             </p>
 
           </div>
 
           <div>
-
-            <p className="text-[#7a7a7a] text-xs mb-1">
-              Phone Number
+            <p
+              style={{
+                color:
+                  "#666",
+              }}
+            >
+              Phone
             </p>
 
-            <p className="text-white">
-
+            <p
+              style={{
+                color:
+                  "#fff",
+              }}
+            >
               +91{" "}
-
-              {formData.phone ||
-                "-"}
-
+              {
+                formData.phone
+              }
             </p>
 
           </div>
 
           <div>
-
-            <p className="text-[#7a7a7a] text-xs mb-1">
+            <p
+              style={{
+                color:
+                  "#666",
+              }}
+            >
               Email
             </p>
 
-            <p className="text-white">
-
-              {formData.email ||
-                "-"}
-
+            <p
+              style={{
+                color:
+                  "#fff",
+              }}
+            >
+              {
+                formData.email
+              }
             </p>
 
           </div>
 
           <div>
+            <p
+              style={{
+                color:
+                  "#666",
+              }}
+            >
+              PAN
+            </p>
 
-            <p className="text-[#7a7a7a] text-xs mb-1">
+            <p
+              style={{
+                color:
+                  "#fff",
+              }}
+            >
+              {
+                formData.pan
+              }
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* LOAN DETAILS */}
+      <div
+        style={{
+          background:
+            "#111",
+          border:
+            "1px solid #222",
+          borderRadius:
+            20,
+          padding:
+            "24px 28px",
+          marginBottom:
+            16,
+        }}
+      >
+
+        <h3
+          style={{
+            color:
+              "#fff",
+            marginBottom:
+              20,
+          }}
+        >
+          Loan Details
+        </h3>
+
+        <div
+          style={{
+            display:
+              "grid",
+            gridTemplateColumns:
+              "1fr 1fr",
+            gap:
+              "16px 24px",
+          }}
+        >
+
+          <div>
+            <p
+              style={{
+                color:
+                  "#666",
+              }}
+            >
               Loan Type
             </p>
 
-            <p className="text-white capitalize">
-
-              {formData.loanType ||
-                "-"}
-
+            <p
+              style={{
+                color:
+                  "#fff",
+              }}
+            >
+              {
+                formData.loanType
+              }
             </p>
 
           </div>
 
           <div>
-
-            <p className="text-[#7a7a7a] text-xs mb-1">
-              Tenure
-            </p>
-
-            <p className="text-white">
-
-              {tenureMonths} months
-
-            </p>
-
-          </div>
-
-          <div>
-
-            <p className="text-[#7a7a7a] text-xs mb-1">
-              Purpose
-            </p>
-
-            <p className="text-white">
-
-              {formData.purpose ||
-                "-"}
-
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* EMI Breakdown */}
-      <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-3xl p-6 mb-8">
-
-        <h3 className="text-xl font-semibold text-white mb-5">
-          EMI Breakdown
-        </h3>
-
-        <div className="space-y-4">
-
-          <div className="flex justify-between items-center">
-
-            <span className="text-[#b3b3b3]">
+            <p
+              style={{
+                color:
+                  "#666",
+              }}
+            >
               Loan Amount
-            </span>
+            </p>
 
-            <span className="text-white font-medium">
-
+            <p
+              style={{
+                color:
+                  "#1DB954",
+              }}
+            >
               {formatINR(
                 loanAmount
               )}
-
-            </span>
-
-          </div>
-
-          <div className="flex justify-between items-center">
-
-            <span className="text-[#b3b3b3]">
-              Total Interest
-            </span>
-
-            <span className="text-white font-medium">
-
-              {formatINR(
-                totalInterest
-              )}
-
-            </span>
+            </p>
 
           </div>
 
-          <div className="flex justify-between items-center border-t border-[#2a2a2a] pt-4">
+          <div>
+            <p
+              style={{
+                color:
+                  "#666",
+              }}
+            >
+              EMI
+            </p>
 
-            <span className="text-white font-semibold">
-              Total Payment
-            </span>
+            <p
+              style={{
+                color:
+                  "#fff",
+              }}
+            >
+              <AnimatedNumber
+                value={
+                  emi
+                }
+                prefix="₹"
+              />
+            </p>
 
-            <span className="text-[#1DB954] text-xl font-bold">
+          </div>
 
-              {formatINR(
-                totalPayment
-              )}
+          <div>
+            <p
+              style={{
+                color:
+                  "#666",
+              }}
+            >
+              Interest
+              Rate
+            </p>
 
-            </span>
+            <p
+              style={{
+                color:
+                  "#fff",
+              }}
+            >
+              {
+                interestRate
+              }
+              %
+            </p>
 
           </div>
 
@@ -375,118 +597,113 @@ function Step8Review() {
 
       </div>
 
-      {/* Consent */}
-      <div className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-3xl p-6 mb-8">
+      {/* CONSENT */}
+      <div
+        style={{
+          background:
+            "#111",
+          border:
+            "1px solid #222",
+          borderRadius:
+            20,
+          padding:
+            "24px 28px",
+          marginBottom:
+            24,
+        }}
+      >
 
-        <h3 className="text-xl font-semibold text-white mb-5">
-          Consent & Declaration
-        </h3>
-
-        <div className="space-y-4">
-
-          <label className="flex items-start gap-3 cursor-pointer">
-
-            <input
-              type="checkbox"
-              checked={
-                agreeTerms
-              }
-              onChange={() =>
-                setAgreeTerms(
-                  !agreeTerms
-                )
-              }
-              className="mt-1 accent-[#1DB954]"
-            />
-
-            <span className="text-sm text-[#b3b3b3] leading-relaxed">
-
-              I confirm that all
-              the information
-              provided is accurate
-              and complete.
-
-            </span>
-
-          </label>
-
-          <label className="flex items-start gap-3 cursor-pointer">
-
-            <input
-              type="checkbox"
-              checked={
-                agreeCreditCheck
-              }
-              onChange={() =>
-                setAgreeCreditCheck(
-                  !agreeCreditCheck
-                )
-              }
-              className="mt-1 accent-[#1DB954]"
-            />
-
-            <span className="text-sm text-[#b3b3b3] leading-relaxed">
-
-              I authorize Zetheta
-              Finance to perform
-              credit verification
-              and KYC checks.
-
-            </span>
-
-          </label>
-
-        </div>
-
-      </div>
-
-      {/* Submit */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-
-        <div>
-
-          <p className="text-[#7a7a7a] text-sm">
-            By clicking submit,
-            your application will
-            be securely processed.
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="bg-[#1DB954] hover:bg-[#1ed760] text-black px-8 py-4 rounded-2xl text-sm font-bold transition-all duration-300 shadow-lg shadow-[#1DB954]/20"
+        <label
+          style={{
+            display:
+              "flex",
+            gap: 12,
+            marginBottom:
+              16,
+            color:
+              "#aaa",
+          }}
         >
-          Submit Application →
-        </button>
+
+          <input
+            type="checkbox"
+            checked={
+              agreeTerms
+            }
+            onChange={() =>
+              setAgreeTerms(
+                !agreeTerms
+              )
+            }
+          />
+
+          I confirm all
+          information is
+          correct.
+
+        </label>
+
+        <label
+          style={{
+            display:
+              "flex",
+            gap: 12,
+            color:
+              "#aaa",
+          }}
+        >
+
+          <input
+            type="checkbox"
+            checked={
+              agreeCreditCheck
+            }
+            onChange={() =>
+              setAgreeeCreditCheck(
+                !agreeCreditCheck
+              )
+            }
+          />
+
+          I authorize
+          credit
+          verification.
+
+        </label>
 
       </div>
 
-      {/* Success */}
-      {submitted && (
-        <div className="mt-8 bg-[#1DB954]/10 border border-[#1DB954]/30 rounded-2xl p-5">
+      {/* SUBMIT */}
+      <button
+        type="button"
+        onClick={
+          handleSubmit
+        }
+        disabled={
+          submitting
+        }
+        style={{
+          background:
+            "#1DB954",
+          color: "#000",
+          border: "none",
+          borderRadius: 14,
+          padding:
+            "14px 28px",
+          fontSize: 14,
+          fontWeight: 700,
+          cursor:
+            "pointer",
+          width: "100%",
+        }}
+      >
 
-          <h3 className="text-[#1DB954] text-xl font-bold mb-2">
-            🎉 Application
-            Submitted
-          </h3>
+        {submitting
+          ? "Processing..."
+          : "Submit Application"}
 
-          <p className="text-[#b3b3b3] text-sm">
-
-            Your loan application
-            has been submitted
-            successfully. Our team
-            will contact you
-            shortly.
-
-          </p>
-
-        </div>
-      )}
+      </button>
 
     </div>
   );
 }
-
-export default Step8Review;
