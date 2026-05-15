@@ -6,6 +6,8 @@ import {
   FormProvider,
 } from "react-hook-form";
 
+import { IndianRupee, Zap, ShieldCheck, FileCheck } from "lucide-react";
+
 import { step1Schema } from "../../schemas/step1Schema";
 import { step2Schema } from "../../schemas/step2Schema";
 import { step3Schema } from "../../schemas/step3Schema";
@@ -181,10 +183,46 @@ function WizardForm() {
 
   return (
     <FormProvider {...methods}>
+      
 
       <div className="min-h-screen flex items-center justify-center bg-[#121212] p-6">
 
         <div className="w-full max-w-5xl bg-[#121212] rounded-3xl overflow-hidden border border-[#2a2a2a] shadow-2xl">
+         {/* Professional Top Info */}
+    
+<div className="bg-white/[0.04] border border-white/[0.08] border-b-2 border-b-green-500 rounded-2xl p-5">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+    {/* Left */}
+    <div className="flex items-center gap-4">
+      <div className="w-13 h-13 rounded-xl bg-white/[0.08] border border-white/[0.12] flex items-center justify-center">
+        <IndianRupee className="w-5 h-5 text-white/80" />
+      </div>
+      <div>
+        <h3 className="text-white text-base font-medium tracking-tight">
+          Zetheta Finance
+        </h3>
+        <p className="text-white/45 text-[13px] mt-0.5">
+          AI-powered digital lending experience
+        </p>
+      </div>
+    </div>
+    {/* Right */}
+    <div className="flex flex-wrap gap-2.5">
+      <div className="flex items-center gap-2 bg-white/[0.06] border border-white/10 px-3.5 py-2 rounded-lg">
+        <Zap className="w-[15px] h-[15px] text-amber-400 shrink-0" />
+        <span className="text-white text-[13px] font-medium whitespace-nowrap">Instant Eligibility</span>
+      </div>
+      <div className="flex items-center gap-2 bg-white/[0.06] border border-white/10 px-3.5 py-2 rounded-lg">
+        <ShieldCheck className="w-[15px] h-[15px] text-green-400 shrink-0" />
+        <span className="text-white text-[13px] font-medium whitespace-nowrap">Bank-grade Security</span>
+      </div>
+      <div className="flex items-center gap-2 bg-white/[0.06] border border-white/10 px-3.5 py-2 rounded-lg">
+        <FileCheck className="w-[15px] h-[15px] text-blue-400 shrink-0" />
+        <span className="text-white text-[13px] font-medium whitespace-nowrap">100% Paperless</span>
+      </div>
+    </div>
+  </div>
+</div>
 
           {/* Header */}
           <div
