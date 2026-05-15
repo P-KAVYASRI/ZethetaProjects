@@ -1,7 +1,9 @@
+import WizardForm from "./components/common/WizardForm";
+
 function App() {
   return (
-    <div className="bg-blue-500 text-white text-3xl p-10">
-      Tailwind Working Successfully
+    <div className="min-h-screen bg-gray-100 p-4">
+      <WizardForm />
     </div>
   );
 }
