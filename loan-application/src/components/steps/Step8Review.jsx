@@ -1,11 +1,13 @@
 function Step8Review() {
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">
+      <h2 className="text-2xl font-bold mb-4 text-white">
         Step 8 - Review & Submit
       </h2>
 
-      <p>Review form here</p>
+      <p className="text-gray-300">
+        Review form here
+      </p>
     </div>
   );
 }

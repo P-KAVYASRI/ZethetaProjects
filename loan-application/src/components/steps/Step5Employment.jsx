@@ -1,11 +1,13 @@
 function Step5Employment() {
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">
+      <h2 className="text-2xl font-bold mb-4 text-white">
         Step 5 - Employment Details
       </h2>
 
-      <p>Employment form here</p>
+      <p className="text-gray-300">
+        Employment form here
+      </p>
     </div>
   );
 }
