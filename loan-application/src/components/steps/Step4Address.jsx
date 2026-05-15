@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  useFormContext,
+} from "react-hook-form";
 
 const addressSchema = z.object({
   addressLine1: z.string().min(5, "Address must be at least 5 characters"),
@@ -187,33 +187,34 @@ function AddressSection({ prefix = "", register, errors, setValue, watch, title,
   );
 }
 
-function Step4Address({ onDataChange }) {
+function Step4Address() {
+
   const {
     register,
-    handleSubmit,
     setValue,
     watch,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(addressSchema),
-    defaultValues: { sameAsCurrent: true },
-  });
+  } = useFormContext();
 
-  const sameAsCurrent = watch("sameAsCurrent");
-
-  const onSubmit = (data) => {
-    onDataChange?.(data);
-  };
+  const sameAsCurrent =
+    watch("sameAsCurrent");
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+    <div>
 
       {/* Intro */}
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-white mb-1">Address Details</h2>
+
+        <h2 className="text-2xl font-semibold text-white mb-1">
+          Address Details
+        </h2>
+
         <p className="text-[#b3b3b3] text-sm">
-          Enter your PIN code and we'll auto-fill your city and state.
+          Enter your PIN code and
+          we'll auto-fill your city
+          and state.
         </p>
+
       </div>
 
       {/* Current Address */}
@@ -229,19 +230,28 @@ function Step4Address({ onDataChange }) {
 
       {/* Same as Current Toggle */}
       <div className="flex items-center gap-3 mb-5 px-1">
+
         <input
-          {...register("sameAsCurrent")}
+          {...register(
+            "sameAsCurrent"
+          )}
           type="checkbox"
           id="sameAsCurrent"
           defaultChecked
           className="w-4 h-4 accent-[#1DB954] cursor-pointer"
         />
-        <label htmlFor="sameAsCurrent" className="text-sm text-[#b3b3b3] cursor-pointer">
-          Permanent address is same as current address
+
+        <label
+          htmlFor="sameAsCurrent"
+          className="text-sm text-[#b3b3b3] cursor-pointer"
+        >
+          Permanent address is same
+          as current address
         </label>
+
       </div>
 
-      {/* Permanent Address — shown only if different */}
+      {/* Permanent Address */}
       {!sameAsCurrent && (
         <AddressSection
           prefix="perm"
@@ -254,9 +264,9 @@ function Step4Address({ onDataChange }) {
         />
       )}
 
-      <button type="submit" id="step4-submit" className="hidden" />
-    </form>
+    </div>
   );
 }
+
 
 export default Step4Address;
