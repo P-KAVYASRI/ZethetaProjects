@@ -119,8 +119,10 @@ function AnimatedNumber({
 export default function Step8Review() {
 
   // IMPORTANT FIX
-  const { getValues } =
-    useFormContext();
+  const {
+  getValues,
+  reset,
+} = useFormContext();
 
   const formData =
     getValues();
