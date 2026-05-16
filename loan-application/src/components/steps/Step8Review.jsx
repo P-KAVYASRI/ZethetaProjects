@@ -123,13 +123,13 @@ function AnimatedNumber({
 export default function Step8Review() {
 
   // IMPORTANT FIX
-  const {
-  getValues,
+ const {
+  watch,
   reset,
 } = useFormContext();
 
- const formData =
-  getValues() || {};
+const formData =
+  watch() || {};
 
   const [
     agreeTerms,
@@ -650,6 +650,115 @@ localStorage.setItem(
   </div>
 
 </div>
+{/* UPLOADED DOCUMENTS */}
+
+{formData.documents && (
+
+  <div
+    style={{
+      background: "#111",
+      border: "1px solid #222",
+      borderRadius: 20,
+      padding: "24px 28px",
+      marginBottom: 16,
+    }}
+  >
+
+    <h3
+      style={{
+        color: "#fff",
+        marginBottom: 20,
+      }}
+    >
+      Uploaded Documents
+    </h3>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(2, 1fr)",
+        gap: 16,
+      }}
+    >
+
+      {Object.entries(
+        formData.documents
+      ).map(
+        ([key, file]) => {
+
+          const isImage =
+            file?.type?.startsWith(
+              "image/"
+            );
+
+          return (
+
+            <div
+              key={key}
+              style={{
+                border:
+                  "1px solid #222",
+                borderRadius: 14,
+                padding: 14,
+                background:
+                  "#181818",
+              }}
+            >
+
+              <p
+                style={{
+                  color: "#aaa",
+                  fontSize: 13,
+                  marginBottom: 10,
+                  textTransform:
+                    "capitalize",
+                }}
+              >
+                {key}
+              </p>
+
+              {isImage ? (
+
+                <img
+                  src={URL.createObjectURL(
+                    file
+                  )}
+                  alt={key}
+                  style={{
+                    width: "100%",
+                    height: 140,
+                    objectFit:
+                      "cover",
+                    borderRadius: 10,
+                  }}
+                />
+
+              ) : (
+
+                <div
+                  style={{
+                    color:
+                      "#1DB954",
+                    fontSize: 14,
+                  }}
+                >
+                  📄 {file.name}
+                </div>
+
+              )}
+
+            </div>
+
+          );
+        }
+      )}
+
+    </div>
+
+  </div>
+
+)}
       {/* SIGNATURE PREVIEW */}
 
 {formData.signature && (

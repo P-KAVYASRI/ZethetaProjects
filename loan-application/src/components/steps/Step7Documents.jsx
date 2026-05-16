@@ -1,7 +1,7 @@
 import {
   useState,
   useRef,
- 
+  useEffect,
 } from "react";
 
 import {
@@ -435,19 +435,31 @@ const handleEnd = () => {
 
 function Step7Documents() {
 
-  const {
-    setValue,
-  } =
-    useFormContext();
+const {
+  setValue,
+  watch,
+  register,
+} =
+  useFormContext();
 
-  const [files, setFiles] =
-    useState({});
+useEffect(() => {
+
+  register("signature");
+
+}, [register]);
+
+
+ const [files, setFiles] =
+  useState(
+    watch("documents") || {}
+  );
 
   const [
-    signature,
-    setSignature,
-  ] = useState(null);
-
+  signature,
+  setSignature,
+] = useState(
+  watch("signature") || null
+);
   const [
     submitted,
     setSubmitted,
@@ -510,10 +522,20 @@ function Step7Documents() {
       (d) =>
         files[d.id]
     );
+const canProceed =
+  allRequiredUploaded &&
+  signature;
+ useEffect(() => {
 
-  const canProceed =
-    allRequiredUploaded &&
-    signature;
+  setValue(
+    "signature",
+    signature
+  );
+
+}, [
+  signature,
+  setValue,
+]);
 
   const handleSubmit = () => {
 
@@ -614,11 +636,23 @@ function Step7Documents() {
       )}
 
       {/* Signature */}
-      <SignaturePad
-        onSave={
-          setSignature
-        }
-      />
+     <SignaturePad
+  onSave={(img) => {
+
+    setSignature(img);
+
+    setValue(
+      "signature",
+      img,
+      {
+        shouldDirty: true,
+        shouldValidate: true,
+      }
+    );
+
+  }}
+/>
+
 
       {submitted &&
         !signature && (
