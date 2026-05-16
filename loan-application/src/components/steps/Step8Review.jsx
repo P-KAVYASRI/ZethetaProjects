@@ -469,7 +469,7 @@ localStorage.setItem(
             <p
               style={{
                 color:
-                  "#fff",
+                  "#1DB954",
               }}
             >
               {
@@ -483,144 +483,173 @@ localStorage.setItem(
 
       </div>
 
-      {/* LOAN DETAILS */}
-      <div
+     {/* LOAN DETAILS */}
+<div
+  style={{
+    background: "#111",
+    border: "1px solid #222",
+    borderRadius: 20,
+    padding: "24px 28px",
+    marginBottom: 16,
+  }}
+>
+
+  <h3
+    style={{
+      color: "#fff",
+      marginBottom: 20,
+    }}
+  >
+    Loan Details
+  </h3>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns:
+        "repeat(3, 1fr)",
+      gap: "16px 24px",
+    }}
+  >
+
+    {/* Loan Type */}
+    <div>
+
+      <p
         style={{
-          background:
-            "#111",
-          border:
-            "1px solid #222",
-          borderRadius:
-            20,
-          padding:
-            "24px 28px",
-          marginBottom:
-            16,
+          color: "#666",
         }}
       >
+        Loan Type
+      </p>
 
-        <h3
-          style={{
-            color:
-              "#fff",
-            marginBottom:
-              20,
-          }}
-        >
-          Loan Details
-        </h3>
+      <p
+        style={{
+          color: "#fff",
+        }}
+      >
+        {formData.loanType}
+      </p>
 
-        <div
-          style={{
-            display:
-              "grid",
-            gridTemplateColumns:
-              "1fr 1fr",
-            gap:
-              "16px 24px",
-          }}
-        >
+    </div>
 
-          <div>
-            <p
-              style={{
-                color:
-                  "#666",
-              }}
-            >
-              Loan Type
-            </p>
+    {/* Loan Amount */}
+    <div>
 
-            <p
-              style={{
-                color:
-                  "#fff",
-              }}
-            >
-              {
-                formData.loanType
-              }
-            </p>
+      <p
+        style={{
+          color: "#666",
+        }}
+      >
+        Loan Amount
+      </p>
 
-          </div>
+      <p
+        style={{
+          color: "#1DB954",
+        }}
+      >
+        {formatINR(
+          loanAmount
+        )}
+      </p>
 
-          <div>
-            <p
-              style={{
-                color:
-                  "#666",
-              }}
-            >
-              Loan Amount
-            </p>
+    </div>
 
-            <p
-              style={{
-                color:
-                  "#1DB954",
-              }}
-            >
-              {formatINR(
-                loanAmount
-              )}
-            </p>
+    {/* EMI */}
+    <div>
 
-          </div>
+      <p
+        style={{
+          color: "#666",
+        }}
+      >
+        EMI
+      </p>
 
-          <div>
-            <p
-              style={{
-                color:
-                  "#666",
-              }}
-            >
-              EMI
-            </p>
+      <p
+        style={{
+          color: "#1DB954",
+        }}
+      >
+        <AnimatedNumber
+          value={emi}
+          prefix="₹"
+        />
+      </p>
 
-            <p
-              style={{
-                color:
-                  "#fff",
-              }}
-            >
-              <AnimatedNumber
-                value={
-                  emi
-                }
-                prefix="₹"
-              />
-            </p>
+    </div>
 
-          </div>
+    {/* Interest Rate */}
+    <div>
 
-          <div>
-            <p
-              style={{
-                color:
-                  "#666",
-              }}
-            >
-              Interest
-              Rate
-            </p>
+      <p
+        style={{
+          color: "#666",
+        }}
+      >
+        Interest Rate
+      </p>
 
-            <p
-              style={{
-                color:
-                  "#fff",
-              }}
-            >
-              {
-                interestRate
-              }
-              %
-            </p>
+      <p
+        style={{
+          color: "#1DB954",
+        }}
+      >
+        {interestRate}%
+      </p>
 
-          </div>
+    </div>
 
-        </div>
+    {/* Total Interest */}
+    <div>
 
-      </div>
+      <p
+        style={{
+          color: "#666",
+        }}
+      >
+        Total Interest
+      </p>
+
+      <p
+        style={{
+          color: "#1DB954",
+        }}
+      >
+        {formatINR(
+          totalInterest
+        )}
+      </p>
+
+    </div>
+
+    {/* Total Payment */}
+    <div>
+
+      <p
+        style={{
+          color: "#666",
+        }}
+      >
+        Total Payment
+      </p>
+
+      <p
+        style={{
+          color: "#1DB954",
+        }}
+      >
+        {formatINR(
+          totalPayment
+        )}
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
       {/* SIGNATURE PREVIEW */}
 
 {formData.signature && (
