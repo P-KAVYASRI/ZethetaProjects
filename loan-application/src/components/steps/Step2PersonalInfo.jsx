@@ -112,7 +112,7 @@ function Step2PersonalInfo() {
             {...register(
               "firstName"
             )}
-            placeholder="Kavya"
+            placeholder="Kavya sri"
             className={inputClass}
           />
 
@@ -159,7 +159,7 @@ function Step2PersonalInfo() {
 
           Date of birth
 
-          <span className="text-[#4c4c4c] ml-2">
+          <span className="text-[#3f3e3e] ml-2">
             (Age must be 21–65)
           </span>
 
@@ -333,7 +333,7 @@ function Step2PersonalInfo() {
               "email"
             )}
             type="email"
-            placeholder="kavya@example.com"
+            placeholder="kavya@gmail.com"
             className={inputClass}
           />
 

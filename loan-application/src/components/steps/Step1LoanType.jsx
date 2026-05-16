@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import {
   useFormContext,
 } from "react-hook-form";
@@ -13,40 +11,7 @@ import {
   Gem,
 } from "lucide-react";
 
-{/* Intro */}
-<div className="mb-8">
-
-  <div className="inline-flex items-center gap-2 bg-[#1DB954]/10 border border-[#1DB954]/20 px-4 py-1 rounded-full mb-4">
-
-    <span className="text-[#1DB954] text-xs font-semibold tracking-wider uppercase">
-      Smart Loan Journey
-    </span>
-
-  </div>
-
-  <h2 className="text-4xl font-bold text-white leading-tight mb-3">
-
-    Find the perfect loan
-
-    <span className="text-[#1DB954]">
-      {" "}
-      for your needs
-    </span>
-
-  </h2>
-
-  <p className="text-[#b3b3b3] max-w-2xl leading-relaxed">
-
-    Choose your preferred loan type
-    and configure repayment
-    options.
-
-  </p>
-
-</div>
-
 const loanTypes = [
-
   {
     id: "home",
     icon: <House color="#81d5a9" size={28} />,
@@ -54,7 +19,8 @@ const loanTypes = [
     min: 500000,
     max: 10000000,
     tenures: [60, 120, 180, 240, 300],
-    badge: "Property documents required in later steps",
+    badge:
+      "Property documents required in later steps",
   },
 
   {
@@ -64,7 +30,8 @@ const loanTypes = [
     min: 50000,
     max: 1000000,
     tenures: [6, 12, 24, 36, 48],
-    badge: "No collateral needed — quick approval",
+    badge:
+      "No collateral needed — quick approval",
   },
 
   {
@@ -74,27 +41,40 @@ const loanTypes = [
     min: 100000,
     max: 5000000,
     tenures: [12, 24, 36, 48, 60],
-    badge: "Vehicle RC & insurance needed later",
+    badge:
+      "Vehicle RC & insurance needed later",
   },
 
   {
     id: "education",
-    icon: <GraduationCap color="#81d5a9" size={28} />,
+    icon: (
+      <GraduationCap
+        color="#81d5a9"
+        size={28}
+      />
+    ),
     label: "Education loan",
     min: 50000,
     max: 2000000,
     tenures: [24, 60, 84, 120],
-    badge: "Admission letter required in later steps",
+    badge:
+      "Admission letter required in later steps",
   },
 
   {
     id: "business",
-    icon: <Briefcase color="#81d5a9" size={28} />,
+    icon: (
+      <Briefcase
+        color="#81d5a9"
+        size={28}
+      />
+    ),
     label: "Business loan",
     min: 500000,
     max: 20000000,
     tenures: [12, 24, 36, 48, 60],
-    badge: "Business registration docs needed later",
+    badge:
+      "Business registration docs needed later",
   },
 
   {
@@ -104,9 +84,9 @@ const loanTypes = [
     min: 10000,
     max: 2500000,
     tenures: [3, 6, 12, 18, 24],
-    badge: "Gold valuation done at branch visit",
+    badge:
+      "Gold valuation done at branch visit",
   },
-
 ];
 
 const purposeOptions = [
@@ -133,50 +113,70 @@ const tenureLabel = (months) =>
     : `${months} mo`;
 
 function Step1LoanDetails() {
-  const { setValue } =
-    useFormContext();
 
-  const [selectedType, setSelectedType] =
-    useState(null);
+  const {
+    setValue,
+    watch,
+  } = useFormContext();
 
-  const [amount, setAmount] =
-    useState(500000);
+  const selectedType =
+    watch("loanType");
 
-  const [tenure, setTenure] =
-    useState(null);
+  const amount =
+    watch("amount");
 
-  const [purpose, setPurpose] =
-    useState("");
+  const tenure =
+    watch("tenure");
 
-  const [referral, setReferral] =
-    useState("");
+  const purpose =
+    watch("purpose");
 
-  const currentLoan = loanTypes.find(
-    (l) => l.id === selectedType
-  );
+  const referral =
+    watch("referral");
 
-  const handleTypeSelect = (loan) => {
+  const currentLoan =
+    loanTypes.find(
+      (l) =>
+        l.id === selectedType
+    );
+
+  const handleTypeSelect = (
+    loan
+  ) => {
+
     const mid =
       Math.round(
-        ((loan.min + loan.max) / 2) /
-          10000
+        (
+          (loan.min +
+            loan.max) /
+          2
+        ) / 10000
       ) * 10000;
 
     const defaultTenure =
       loan.tenures[1] ??
       loan.tenures[0];
 
-    setSelectedType(loan.id);
-    setAmount(mid);
-    setTenure(defaultTenure);
+    setValue(
+      "loanType",
+      loan.id
+    );
 
-    setValue("loanType", loan.id);
-    setValue("amount", mid);
+    setValue(
+      "amount",
+      mid
+    );
+
     setValue(
       "tenure",
       defaultTenure
     );
-    setValue("purpose", purpose);
+
+    setValue(
+      "purpose",
+      purpose
+    );
+
     setValue(
       "referral",
       referral
@@ -210,9 +210,9 @@ function Step1LoanDetails() {
 
         <p className="text-[#b3b3b3] max-w-2xl leading-relaxed">
 
-          Choose your preferred loan type
-          and configure repayment
-          options.
+          Choose your preferred
+          loan type and configure
+          repayment options.
 
         </p>
 
@@ -225,38 +225,42 @@ function Step1LoanDetails() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
 
-        {loanTypes.map((loan) => (
-          <div
-            key={loan.id}
-            onClick={() =>
-              handleTypeSelect(loan)
-            }
-            className={`flex flex-col items-center p-4 rounded-2xl border cursor-pointer transition-all duration-300 hover:scale-[1.03]
-            ${
-              selectedType ===
-              loan.id
-                ? "border-[#1DB954] bg-[#1a2e1e]"
-                : "border-[#3a3a3a] bg-[#282828]"
-            }`}
-          >
-
-            <span className="text-2xl mb-2">
-              {loan.icon}
-            </span>
-
-            <span
-              className={`text-xs font-medium text-center ${
+        {loanTypes.map(
+          (loan) => (
+            <div
+              key={loan.id}
+              onClick={() =>
+                handleTypeSelect(
+                  loan
+                )
+              }
+              className={`flex flex-col items-center p-4 rounded-2xl border cursor-pointer transition-all duration-300 hover:scale-[1.03]
+              ${
                 selectedType ===
                 loan.id
-                  ? "text-white"
-                  : "text-[#b3b3b3]"
+                  ? "border-[#1DB954] bg-[#1a2e1e]"
+                  : "border-[#3a3a3a] bg-[#282828]"
               }`}
             >
-              {loan.label}
-            </span>
 
-          </div>
-        ))}
+              <span className="text-2xl mb-2">
+                {loan.icon}
+              </span>
+
+              <span
+                className={`text-xs font-medium text-center ${
+                  selectedType ===
+                  loan.id
+                    ? "text-white"
+                    : "text-[#b3b3b3]"
+                }`}
+              >
+                {loan.label}
+              </span>
+
+            </div>
+          )
+        )}
 
       </div>
 
@@ -265,7 +269,10 @@ function Step1LoanDetails() {
         <div className="inline-flex items-center gap-2 bg-[#1DB954]/10 border border-[#1DB954]/30 rounded-full px-3 py-1 mb-5">
 
           <span className="text-[#1DB954] text-xs">
-            ℹ {currentLoan.badge}
+            ℹ{" "}
+            {
+              currentLoan.badge
+            }
           </span>
 
         </div>
@@ -297,11 +304,11 @@ function Step1LoanDetails() {
           step={10000}
           value={amount}
           onChange={(e) => {
-            const value = Number(
-              e.target.value
-            );
 
-            setAmount(value);
+            const value =
+              Number(
+                e.target.value
+              );
 
             setValue(
               "amount",
@@ -322,16 +329,16 @@ function Step1LoanDetails() {
 
         <div className="flex flex-wrap gap-2">
 
-          {(currentLoan?.tenures ?? [
-            6,
-            12,
-            24,
-          ]).map((t) => (
+          {(currentLoan?.tenures ??
+            [
+              6,
+              12,
+              24,
+            ]).map((t) => (
             <button
               type="button"
               key={t}
               onClick={() => {
-                setTenure(t);
 
                 setValue(
                   "tenure",
@@ -363,10 +370,9 @@ function Step1LoanDetails() {
         <select
           value={purpose}
           onChange={(e) => {
+
             const value =
               e.target.value;
-
-            setPurpose(value);
 
             setValue(
               "purpose",
@@ -407,10 +413,9 @@ function Step1LoanDetails() {
           placeholder="REF123"
           value={referral}
           onChange={(e) => {
+
             const value =
               e.target.value.toUpperCase();
-
-            setReferral(value);
 
             setValue(
               "referral",

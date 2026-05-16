@@ -262,15 +262,31 @@ export default function Step8Review() {
 
       setTimeout(() => {
 
-        setSubmitting(
-          false
-        );
+  setSubmitting(false);
 
-        setSubmitted(
-          true
-        );
+  const existingApps =
+  JSON.parse(
+    localStorage.getItem(
+      "submittedApplications"
+    )
+  ) || [];
 
-      }, 1800);
+existingApps.push({
+  ...formData,
+  submittedAt:
+    new Date().toISOString(),
+});
+
+localStorage.setItem(
+  "submittedApplications",
+  JSON.stringify(existingApps)
+);
+
+ 
+
+  setSubmitted(true);
+
+}, 1800);
     };
 
   if (submitted) {

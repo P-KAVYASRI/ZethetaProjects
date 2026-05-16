@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   useForm,
@@ -7,6 +7,7 @@ import {
 } from "react-hook-form";
 
 import { IndianRupee, Zap, ShieldCheck, FileCheck } from "lucide-react";
+import useAutoSave from "../../hooks/useAutoSave";
 
 import { step1Schema } from "../../schemas/step1Schema";
 import { step2Schema } from "../../schemas/step2Schema";
@@ -49,7 +50,7 @@ function WizardForm() {
     useState(0);
 
   const methods = useForm({
-
+    
     resolver: zodResolver(
     stepSchemas[currentStep] || step1Schema
   ),
@@ -105,9 +106,43 @@ function WizardForm() {
     },
 
   });
+  const formValues = methods.watch();
+
 
   const totalSteps =
     stepLabels.length;
+  useAutoSave(formValues, currentStep);
+  useEffect(() => {
+
+  const savedDraft =
+    localStorage.getItem(
+      "loanApplicationDraft"
+    );
+
+  if (savedDraft) {
+
+    const parsed =
+      JSON.parse(savedDraft);
+
+    if (parsed?.formData) {
+
+      methods.reset(parsed.formData);
+
+    }
+
+    if (
+      parsed?.currentStep >= 0
+    ) {
+
+      setCurrentStep(
+        parsed.currentStep
+      );
+
+    }
+
+  }
+
+}, []);
 
   const nextStep = () => {
 
