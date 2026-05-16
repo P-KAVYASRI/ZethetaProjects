@@ -636,6 +636,43 @@ localStorage.setItem(
         </div>
 
       </div>
+      {/* SIGNATURE PREVIEW */}
+
+{formData.signature && (
+
+  <div
+    style={{
+      background: "#111",
+      border: "1px solid #222",
+      borderRadius: 20,
+      padding: "24px 28px",
+      marginBottom: 16,
+    }}
+  >
+
+    <h3
+      style={{
+        color: "#fff",
+        marginBottom: 20,
+      }}
+    >
+      Digital Signature
+    </h3>
+
+    <img
+      src={formData.signature}
+      alt="signature"
+      style={{
+        width: 220,
+        borderRadius: 12,
+        border: "1px solid #333",
+        background: "#1a1a1a",
+      }}
+    />
+
+  </div>
+
+)}
 
       {/* CONSENT */}
       <div

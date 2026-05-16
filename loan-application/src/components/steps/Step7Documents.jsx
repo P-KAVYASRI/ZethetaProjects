@@ -1,7 +1,7 @@
 import {
   useState,
   useRef,
-  useEffect,
+ 
 } from "react";
 
 import {
@@ -11,6 +11,7 @@ import {
 import {
   useDropzone,
 } from "react-dropzone";
+import SignatureCanvas from "react-signature-canvas";
 
 const MAX_FILE_SIZE =
   5 * 1024 * 1024;
@@ -341,197 +342,39 @@ function SignaturePad({
   onSave,
 }) {
 
-  const canvasRef =
-    useRef();
+  const sigCanvas = useRef(null);
 
-  const [drawing, setDrawing] =
-    useState(false);
+  
 
   const [
     hasSignature,
     setHasSignature,
   ] = useState(false);
 
-  const lastPos =
-    useRef(null);
-
-  useEffect(() => {
-
-    const canvas =
-      canvasRef.current;
-
-    const ctx =
-      canvas.getContext("2d");
-
-    ctx.fillStyle =
-      "#1a1a1a";
-
-    ctx.fillRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    ctx.strokeStyle =
-      "#ffffff";
-
-    ctx.lineWidth = 2;
-
-  }, []);
-
-  const getPos = (
-    e,
-    canvas
-  ) => {
-
-    const rect =
-      canvas.getBoundingClientRect();
-      const scaleX =
-    canvas.width /
-    rect.width;
-
-  const scaleY =
-    canvas.height /
-    rect.height;
-
-    if (e.touches) {
-
-      return {
-
-        x:
-          e.touches[0]
-            .clientX -
-          rect.left,
-
-        y:
-          e.touches[0]
-            .clientY -
-          rect.top,
-
-      };
-
-    }
-
-    return {
-
-      x:
-        e.clientX -
-        rect.left,
-
-      y:
-        e.clientY -
-        rect.top,
-
-    };
-
-  };
-
-  const startDraw = (e) => {
-
-    e.preventDefault();
-
-    setDrawing(true);
-
-    lastPos.current =
-      getPos(
-        e,
-        canvasRef.current
-      );
-
-  };
-
-  const draw = (e) => {
-
-    e.preventDefault();
-
-    if (!drawing) return;
-
-    const canvas =
-      canvasRef.current;
-
-    const ctx =
-      canvas.getContext("2d");
-      ctx.strokeStyle =
-    "#ffffff";
-
-  ctx.lineWidth = 2;
-
-  ctx.lineCap = "round";
-
-  ctx.lineJoin = "round";
-
-    const pos =
-      getPos(
-        e,
-        canvas
-      );
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      lastPos.current.x,
-      lastPos.current.y
-    );
-
-    ctx.lineTo(
-      pos.x,
-      pos.y
-    );
-
-    ctx.stroke();
-
-    lastPos.current =
-      pos;
-
-    setHasSignature(
-      true
-    );
-
-  };
-
-  const stopDraw = () => {
-
-    setDrawing(false);
-
-    if (hasSignature) {
-
-      const dataUrl =
-        canvasRef.current.toDataURL(
-          "image/png"
-        );
-
-      onSave(dataUrl);
-
-    }
-
-  };
+  
 
   const clearCanvas = () => {
+  sigCanvas.current.clear();
 
-    const canvas =
-      canvasRef.current;
+  setHasSignature(false);
 
-    const ctx =
-      canvas.getContext("2d");
+  onSave(null);
+};
+const handleEnd = () => {
+  if (!sigCanvas.current.isEmpty()) {
+    setHasSignature(true);
 
-    ctx.fillStyle =
-      "#1a1a1a";
+    const dataUrl =
+      sigCanvas.current
+        .getTrimmedCanvas()
+        .toDataURL("image/png");
 
-    ctx.fillRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
+    onSave(dataUrl);
+  }
+};
 
-    setHasSignature(
-      false
-    );
 
-    onSave(null);
 
-  };
 
   return (
 
@@ -571,33 +414,17 @@ function SignaturePad({
 
       <div className="mt-3 border border-dashed border-[#3a3a3a] rounded-xl overflow-hidden">
 
-        <canvas
-          ref={canvasRef}
-          width={900}
-          height={220}
-          className="w-full cursor-crosshair touch-none"
-          onMouseDown={
-            startDraw
-          }
-          onMouseMove={
-            draw
-          }
-          onMouseUp={
-            stopDraw
-          }
-          onMouseLeave={
-            stopDraw
-          }
-          onTouchStart={
-            startDraw
-          }
-          onTouchMove={
-            draw
-          }
-          onTouchEnd={
-            stopDraw
-          }
-        />
+        <SignatureCanvas
+  ref={sigCanvas}
+  penColor="white"
+  onEnd={handleEnd}
+  canvasProps={{
+    width: 900,
+    height: 220,
+    className:
+      "w-full bg-[#1a1a1a] cursor-crosshair",
+  }}
+/>
 
       </div>
 
