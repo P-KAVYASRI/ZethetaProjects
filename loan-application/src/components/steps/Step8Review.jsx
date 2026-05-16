@@ -291,14 +291,36 @@ localStorage.setItem(
 }, 1800);
     };
 
-  if (submitted) {
+ if (submitted) {
 
-    return (
-      <div className="text-center text-white text-3xl py-20">
+  return (
+
+    <div className="text-center py-20">
+
+      <div className="text-white text-3xl">
         🎉 Application Submitted Successfully
       </div>
-    );
-  }
+
+      <button
+        onClick={() => {
+
+          reset();
+
+          localStorage.removeItem(
+            "loanApplicationDraft"
+          );
+
+          window.location.reload();
+
+        }}
+        className="mt-8 px-6 py-3 rounded-xl bg-[#1DB954] text-black font-semibold hover:scale-105 transition-all duration-200"
+      >
+        Start New Application
+      </button>
+
+    </div>
+  );
+}
 
   return (
     <div
