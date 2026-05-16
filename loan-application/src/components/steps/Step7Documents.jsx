@@ -8,6 +8,10 @@ import {
   useFormContext,
 } from "react-hook-form";
 
+import {
+  useDropzone,
+} from "react-dropzone";
+
 const MAX_FILE_SIZE =
   5 * 1024 * 1024;
 
@@ -27,6 +31,7 @@ const docConfig = [
     hint:
       "JPG, PNG or PDF • Max 5MB",
   },
+
   {
     id: "aadhaar",
     label: "Aadhaar card",
@@ -36,6 +41,7 @@ const docConfig = [
     hint:
       "Front and back side • Max 5MB",
   },
+
   {
     id: "salarySlip",
     label: "Salary slips",
@@ -45,6 +51,7 @@ const docConfig = [
     hint:
       "Last 3 months • Max 5MB",
   },
+
   {
     id: "itr",
     label: "ITR / Form 16",
@@ -54,6 +61,7 @@ const docConfig = [
     hint:
       "Last 2 years • Max 5MB",
   },
+
   {
     id: "gst",
     label: "GST certificate",
@@ -63,6 +71,7 @@ const docConfig = [
     hint:
       "For self-employed only • Max 5MB",
   },
+
   {
     id: "bankStatement",
     label: "Bank statement",
@@ -80,10 +89,6 @@ function FileUploadCard({
   onUpload,
   onRemove,
 }) {
-  const inputRef = useRef();
-
-  const [dragOver, setDragOver] =
-    useState(false);
 
   const [error, setError] =
     useState("");
@@ -126,21 +131,49 @@ function FileUploadCard({
       validate(f)
     ) {
 
-      onUpload(doc.id, f);
+      onUpload(
+        doc.id,
+        f
+      );
     }
   };
 
-  const handleDrop = (e) => {
-
-    e.preventDefault();
-
-    setDragOver(false);
+  const onDrop = (
+    acceptedFiles
+  ) => {
 
     const f =
-      e.dataTransfer.files[0];
+      acceptedFiles[0];
 
-    if (f) handleFile(f);
+    if (f) {
+
+      handleFile(f);
+
+    }
+
   };
+
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    fileRejections,
+  } = useDropzone({
+
+    onDrop,
+
+    multiple: false,
+
+    maxSize:
+      MAX_FILE_SIZE,
+
+    accept: {
+      "image/jpeg": [],
+      "image/png": [],
+      "application/pdf": [],
+    },
+
+  });
 
   const isPdf =
     file?.type ===
@@ -154,25 +187,17 @@ function FileUploadCard({
       : null;
 
   return (
+
     <div
-      className={`border rounded-2xl p-4 transition-all duration-200
+      {...getRootProps()}
+      className={`border rounded-2xl p-4 transition-all duration-200 cursor-pointer
       ${
         file
           ? "border-[#1DB954]/50 bg-[#1a2e1e]"
-          : dragOver
+          : isDragActive
           ? "border-[#1DB954] bg-[#1DB954]/5"
           : "border-[#2a2a2a] bg-[#1a1a1a]"
       }`}
-      onDragOver={(e) => {
-
-        e.preventDefault();
-
-        setDragOver(true);
-      }}
-      onDragLeave={() =>
-        setDragOver(false)
-      }
-      onDrop={handleDrop}
     >
 
       <div className="flex items-start justify-between mb-2">
@@ -200,35 +225,47 @@ function FileUploadCard({
         </div>
 
         {file && (
+
           <button
             type="button"
-            onClick={() => {
+            onClick={(e) => {
 
-              onRemove(doc.id);
+              e.stopPropagation();
+
+              onRemove(
+                doc.id
+              );
 
               setError("");
+
             }}
             className="text-[#5a5a5a] hover:text-red-400 text-xs transition-colors ml-2"
           >
             ✕ Remove
           </button>
+
         )}
 
       </div>
 
       {file ? (
+
         <div className="flex items-center gap-3 mt-3 p-3 bg-[#121212] rounded-xl">
 
           {previewUrl ? (
+
             <img
               src={previewUrl}
               alt="preview"
               className="w-10 h-10 rounded-lg object-cover border border-[#2a2a2a]"
             />
+
           ) : (
+
             <div className="w-10 h-10 rounded-lg bg-[#282828] flex items-center justify-center text-lg border border-[#2a2a2a]">
               📄
             </div>
+
           )}
 
           <div className="flex-1 min-w-0">
@@ -254,14 +291,17 @@ function FileUploadCard({
           </div>
 
         </div>
+
       ) : (
+
         <button
           type="button"
-          onClick={() =>
-            inputRef.current?.click()
-          }
           className="w-full mt-3 py-4 border border-dashed border-[#3a3a3a] rounded-xl text-[#b3b3b3] text-xs hover:border-[#1DB954] hover:text-[#1DB954] transition-all duration-200 flex flex-col items-center gap-1"
         >
+
+          <input
+            {...getInputProps()}
+          />
 
           <span className="text-2xl">
             📁
@@ -273,34 +313,36 @@ function FileUploadCard({
           </span>
 
         </button>
+
       )}
 
       {error && (
+
         <p className="text-red-400 text-xs mt-2">
           ⚠ {error}
         </p>
+
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept={doc.accept}
-        className="hidden"
-        onChange={(e) =>
-          handleFile(
-            e.target.files[0]
-          )
-        }
-      />
+      {fileRejections.length > 0 && (
+
+        <p className="text-red-400 text-xs mt-2">
+          ⚠ Invalid file or file too large
+        </p>
+
+      )}
 
     </div>
+
   );
 }
 
 function SignaturePad({
   onSave,
 }) {
-  const canvasRef = useRef();
+
+  const canvasRef =
+    useRef();
 
   const [drawing, setDrawing] =
     useState(false);
@@ -345,10 +387,18 @@ function SignaturePad({
 
     const rect =
       canvas.getBoundingClientRect();
+      const scaleX =
+    canvas.width /
+    rect.width;
+
+  const scaleY =
+    canvas.height /
+    rect.height;
 
     if (e.touches) {
 
       return {
+
         x:
           e.touches[0]
             .clientX -
@@ -358,10 +408,13 @@ function SignaturePad({
           e.touches[0]
             .clientY -
           rect.top,
+
       };
+
     }
 
     return {
+
       x:
         e.clientX -
         rect.left,
@@ -369,7 +422,9 @@ function SignaturePad({
       y:
         e.clientY -
         rect.top,
+
     };
+
   };
 
   const startDraw = (e) => {
@@ -383,6 +438,7 @@ function SignaturePad({
         e,
         canvasRef.current
       );
+
   };
 
   const draw = (e) => {
@@ -396,11 +452,20 @@ function SignaturePad({
 
     const ctx =
       canvas.getContext("2d");
+      ctx.strokeStyle =
+    "#ffffff";
 
-    const pos = getPos(
-      e,
-      canvas
-    );
+  ctx.lineWidth = 2;
+
+  ctx.lineCap = "round";
+
+  ctx.lineJoin = "round";
+
+    const pos =
+      getPos(
+        e,
+        canvas
+      );
 
     ctx.beginPath();
 
@@ -416,9 +481,13 @@ function SignaturePad({
 
     ctx.stroke();
 
-    lastPos.current = pos;
+    lastPos.current =
+      pos;
 
-    setHasSignature(true);
+    setHasSignature(
+      true
+    );
+
   };
 
   const stopDraw = () => {
@@ -433,7 +502,9 @@ function SignaturePad({
         );
 
       onSave(dataUrl);
+
     }
+
   };
 
   const clearCanvas = () => {
@@ -454,12 +525,16 @@ function SignaturePad({
       canvas.height
     );
 
-    setHasSignature(false);
+    setHasSignature(
+      false
+    );
 
     onSave(null);
+
   };
 
   return (
+
     <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 mt-6">
 
       <div className="flex items-center justify-between mb-1">
@@ -479,13 +554,17 @@ function SignaturePad({
         </div>
 
         {hasSignature && (
+
           <button
             type="button"
-            onClick={clearCanvas}
+            onClick={
+              clearCanvas
+            }
             className="text-[#5a5a5a] hover:text-red-400 text-xs"
           >
             ✕ Clear
           </button>
+
         )}
 
       </div>
@@ -494,21 +573,27 @@ function SignaturePad({
 
         <canvas
           ref={canvasRef}
-          width={600}
-          height={160}
+          width={900}
+          height={220}
           className="w-full cursor-crosshair touch-none"
           onMouseDown={
             startDraw
           }
-          onMouseMove={draw}
-          onMouseUp={stopDraw}
+          onMouseMove={
+            draw
+          }
+          onMouseUp={
+            stopDraw
+          }
           onMouseLeave={
             stopDraw
           }
           onTouchStart={
             startDraw
           }
-          onTouchMove={draw}
+          onTouchMove={
+            draw
+          }
           onTouchEnd={
             stopDraw
           }
@@ -517,22 +602,29 @@ function SignaturePad({
       </div>
 
     </div>
+
   );
 }
 
 function Step7Documents() {
 
-  const { setValue } =
+  const {
+    setValue,
+  } =
     useFormContext();
 
   const [files, setFiles] =
     useState({});
 
-  const [signature, setSignature] =
-    useState(null);
+  const [
+    signature,
+    setSignature,
+  ] = useState(null);
 
-  const [submitted, setSubmitted] =
-    useState(false);
+  const [
+    submitted,
+    setSubmitted,
+  ] = useState(false);
 
   const handleUpload = (
     id,
@@ -552,7 +644,9 @@ function Step7Documents() {
       );
 
       return updated;
+
     });
+
   };
 
   const handleRemove = (
@@ -573,17 +667,21 @@ function Step7Documents() {
       );
 
       return updated;
+
     });
+
   };
 
   const requiredDocs =
     docConfig.filter(
-      (d) => d.required
+      (d) =>
+        d.required
     );
 
   const allRequiredUploaded =
     requiredDocs.every(
-      (d) => files[d.id]
+      (d) =>
+        files[d.id]
     );
 
   const canProceed =
@@ -592,7 +690,9 @@ function Step7Documents() {
 
   const handleSubmit = () => {
 
-    setSubmitted(true);
+    setSubmitted(
+      true
+    );
 
     if (canProceed) {
 
@@ -605,18 +705,23 @@ function Step7Documents() {
         "signature",
         signature
       );
+
     }
+
   };
 
   return (
+
     <div>
 
       {/* Intro */}
       <div className="mb-6">
 
         <h2 className="text-2xl font-semibold text-white mb-1">
+
           Documents &
           Signature
+
         </h2>
 
       </div>
@@ -630,11 +735,12 @@ function Step7Documents() {
             className="bg-[#1DB954] h-1.5 rounded-full transition-all duration-500"
             style={{
               width: `${
-                (Object.keys(
-                  files
-                ).length /
-                  docConfig.length) *
-                100
+                (
+                  Object.keys(
+                    files
+                  ).length /
+                  docConfig.length
+                ) * 100
               }%`,
             }}
           />
@@ -646,30 +752,39 @@ function Step7Documents() {
       {/* Upload Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
 
-        {docConfig.map((doc) => (
-          <FileUploadCard
-            key={doc.id}
-            doc={doc}
-            file={files[doc.id]}
-            onUpload={
-              handleUpload
-            }
-            onRemove={
-              handleRemove
-            }
-          />
-        ))}
+        {docConfig.map(
+          (doc) => (
+
+            <FileUploadCard
+              key={doc.id}
+              doc={doc}
+              file={
+                files[doc.id]
+              }
+              onUpload={
+                handleUpload
+              }
+              onRemove={
+                handleRemove
+              }
+            />
+
+          )
+        )}
 
       </div>
 
       {/* Validation */}
       {submitted &&
         !allRequiredUploaded && (
+
           <p className="text-red-400 text-xs mt-2">
-            ⚠ Please upload PAN
-            and Aadhaar
+
+            ⚠ Please upload PAN and Aadhaar
+
           </p>
-        )}
+
+      )}
 
       {/* Signature */}
       <SignaturePad
@@ -680,10 +795,14 @@ function Step7Documents() {
 
       {submitted &&
         !signature && (
+
           <p className="text-red-400 text-xs mt-2">
+
             ⚠ Signature required
+
           </p>
-        )}
+
+      )}
 
       {/* Consent */}
       <div className="mt-5 p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl">
@@ -702,11 +821,14 @@ function Step7Documents() {
       <button
         type="button"
         id="step7-submit"
-        onClick={handleSubmit}
+        onClick={
+          handleSubmit
+        }
         className="hidden"
       />
 
     </div>
+
   );
 }
 
