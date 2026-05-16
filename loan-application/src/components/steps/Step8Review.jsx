@@ -3,6 +3,9 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import {
   useFormContext,
 } from "react-hook-form";
+import {
+  calculateEMI,
+} from "../../utils/emiCalculator";
 
 const interestRates = {
   home: 8.5,
@@ -12,6 +15,7 @@ const interestRates = {
   business: 14,
   gold: 11,
 };
+
 
 const loanIcons = {
   home: "🏠",
@@ -124,8 +128,8 @@ export default function Step8Review() {
   reset,
 } = useFormContext();
 
-  const formData =
-    getValues();
+ const formData =
+  getValues() || {};
 
   const [
     agreeTerms,
@@ -180,42 +184,23 @@ export default function Step8Review() {
     );
 
   const interestRate =
-    interestRates[
-      formData.loanType
-    ] || 10;
+  interestRates?.[
+    formData?.loanType
+  ] || 10;
 
-  const emi =
-    useMemo(() => {
 
-      const r =
-        interestRate /
-        12 /
-        100;
+const emi = useMemo(() => {
+  return calculateEMI(
+    loanAmount,
+    interestRate,
+    tenureMonths
+  );
 
-      const val =
-        (loanAmount *
-          r *
-          Math.pow(
-            1 + r,
-            tenureMonths
-          )) /
-        (Math.pow(
-          1 + r,
-          tenureMonths
-        ) -
-          1);
-
-      return isFinite(val)
-        ? Math.round(
-            val
-          )
-        : 0;
-
-    }, [
-      loanAmount,
-      tenureMonths,
-      interestRate,
-    ]);
+}, [
+  loanAmount,
+  interestRate,
+  tenureMonths,
+]);
 
   const totalPayment =
     emi *

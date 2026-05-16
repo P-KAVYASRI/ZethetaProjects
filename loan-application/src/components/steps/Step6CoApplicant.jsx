@@ -153,7 +153,7 @@ function Step6CoApplicant() {
               {...register(
                 "coName"
               )}
-              placeholder="Ravi Sharma"
+              placeholder="Arpit Kumar Mishra"
               className={inputClass}
             />
 
