@@ -11,64 +11,45 @@ import { step4Schema } from "../../schemas/step4Schema";
 import { step5Schema } from "../../schemas/step5Schema";
 import { step6Schema } from "../../schemas/step6Schema";
 
-import Step1LoanDetails from "../steps/Step1LoanType";
+import Step1LoanDetails  from "../steps/Step1LoanType";
 import Step2PersonalInfo from "../steps/Step2PersonalInfo";
-import Step3KYC from "../steps/Step3KYC";
-import Step4Address from "../steps/Step4Address";
-import Step5Employment from "../steps/Step5Employment";
-import Step6CoApplicant from "../steps/Step6CoApplicant";
-import Step7Documents from "../steps/Step7Documents";
-import Step8Review from "../steps/Step8Review";
+import Step3KYC          from "../steps/Step3KYC";
+import Step4Address      from "../steps/Step4Address";
+import Step5Employment   from "../steps/Step5Employment";
+import Step6CoApplicant  from "../steps/Step6CoApplicant";
+import Step7Documents    from "../steps/Step7Documents";
+import Step8Review       from "../steps/Step8Review";
 
 const stepSchemas = [
-  step1Schema,
-  step2Schema,
-  step3Schema,
-  step4Schema,
-  step5Schema,
-  step6Schema,
+  step1Schema, step2Schema, step3Schema,
+  step4Schema, step5Schema, step6Schema,
 ];
 
 const stepLabels = [
-  "Loan Details",
-  "Personal Info",
-  "KYC",
-  "Address",
-  "Employment",
-  "Co-Applicant",
-  "Documents",
-  "Review",
+  "Loan Details", "Personal Info", "KYC",
+  "Address", "Employment", "Co-Applicant",
+  "Documents", "Review",
 ];
 
 const DEFAULT_VALUES = {
-  loanType: "",
-  amount: 500000,
-  tenure: "",
-  purpose: "",
-  referral: "",
-  firstName: "",
-  lastName: "",
-  dob: "",
-  gender: "",
-  maritalStatus: "",
-  phone: "",
-  email: "",
-  pan: "",
-  aadhaar: "",
-  voterId: "",
-  passport: "",
-  addressLine1: "",
-  addressLine2: "",
-  pinCode: "",
-  city: "",
-  state: "",
-  employmentType: "",
-  companyName: "",
-  designation: "",
-  coName: "",
-  coRelation: "",
-  documents: {},
-  signature: null,
+  // Step 1
+  loanType: "", amount: 500000, tenure: "", purpose: "", referral: "",
+  // Step 2
+  firstName: "", lastName: "", dob: "", gender: "", maritalStatus: "", phone: "", email: "",
+  // Step 3
+  pan: "", aadhaar: "", voterId: "", passport: "",
+  // Step 4
+  addressLine1: "", addressLine2: "", pinCode: "", city: "", state: "",
+  sameAsCurrent: true,
+  permAddressLine1: "", permAddressLine2: "", permPinCode: "", permCity: "", permState: "",
+  // Step 5
+  employmentType: "salaried", companyName: "", designation: "", companyType: "",
+  employmentSince: "", monthlySalary: "", salaryMode: "",
+  businessName: "", businessType: "", businessSince: "", annualTurnover: "",
+  // Step 6
+  hasCoApplicant: false, coName: "", coRelation: "", coPhone: "", coEmployment: "", coIncome: "",
+  // Step 7
+  documents: {}, documentsMeta: {}, signature: null,
 };
 
 function WizardForm() {
@@ -77,76 +58,45 @@ function WizardForm() {
   const methods = useForm({
     resolver: zodResolver(stepSchemas[currentStep] || step1Schema),
     mode: "onChange",
-    shouldUnregister: false,   // CRITICAL — keeps all field values when switching steps
+    shouldUnregister: false,
     defaultValues: DEFAULT_VALUES,
   });
 
   const totalSteps = stepLabels.length;
-
-  // Watch all values for autosave (signature excluded — stored separately)
   const formValues = methods.watch();
   useAutoSave(formValues, currentStep);
 
-  // ── Restore draft on mount ──────────────────────────────────────────────
+  /* ── Restore draft on mount ── */
   useEffect(() => {
     try {
       const savedDraft = localStorage.getItem("loanApplicationDraft");
-      if (!savedDraft) return;
-
-      const parsed = JSON.parse(savedDraft);
-
-      if (parsed?.formData) {
-        // reset() restores all scalar fields from the draft
-        methods.reset({
-          ...DEFAULT_VALUES,
-          ...parsed.formData,
-          // documents (File objects) cannot survive JSON — reset to empty
-          documents: {},
-          // signature is stored in its own key to survive stringify limits
-          signature: null,
-        });
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed?.formData) {
+          methods.reset({ ...DEFAULT_VALUES, ...parsed.formData, documents: {}, signature: null });
+        }
+        if (parsed?.currentStep >= 0) setCurrentStep(parsed.currentStep);
       }
-
-      // Restore signature from its dedicated storage key (avoids JSON size limits)
       const savedSig = localStorage.getItem("loanSignature");
       if (savedSig) {
-        methods.setValue("signature", savedSig, {
-          shouldDirty: true,
-          shouldTouch: true,
-        });
+        methods.setValue("signature", savedSig, { shouldDirty: true, shouldTouch: true });
       }
+    } catch (_) {}
+  }, []); // eslint-disable-line
 
-      if (parsed?.currentStep >= 0) {
-        setCurrentStep(parsed.currentStep);
-      }
-    } catch (err) {
-      console.warn("Failed to restore draft:", err);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Persist signature to its own localStorage key whenever it changes ──
-  // This is separate from useAutoSave so it never gets lost in JSON.stringify
+  /* ── Persist signature whenever it changes ── */
   useEffect(() => {
-    const subscription = methods.watch((values) => {
+    const sub = methods.watch((values) => {
       if (values.signature) {
-        try {
-          localStorage.setItem("loanSignature", values.signature);
-        } catch (_) {
-          // Storage quota exceeded — silently ignore
-        }
+        try { localStorage.setItem("loanSignature", values.signature); } catch (_) {}
       }
     });
-    return () => subscription.unsubscribe();
+    return () => sub.unsubscribe();
   }, [methods]);
 
-  // ── Navigation ──────────────────────────────────────────────────────────
-  const nextStep = () => {
-    if (currentStep < totalSteps - 1) setCurrentStep((p) => p + 1);
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) setCurrentStep((p) => p - 1);
-  };
+  const nextStep     = () => { if (currentStep < totalSteps - 1) setCurrentStep(p => p + 1); };
+  const prevStep     = () => { if (currentStep > 0) setCurrentStep(p => p - 1); };
+  const goToStep     = (index) => { if (index >= 0 && index < totalSteps) setCurrentStep(index); };
 
   const renderStep = () => {
     switch (currentStep) {
@@ -157,7 +107,7 @@ function WizardForm() {
       case 4: return <Step5Employment />;
       case 5: return <Step6CoApplicant />;
       case 6: return <Step7Documents />;
-      case 7: return <Step8Review />;
+      case 7: return <Step8Review onGoToStep={goToStep} />;
       default: return null;
     }
   };
@@ -196,7 +146,7 @@ function WizardForm() {
             </div>
           </div>
 
-          {/* Header */}
+          {/* Green Header */}
           <div className="p-8" style={{ background: "linear-gradient(180deg, #1DB954 0%, #158a3e 100%)" }}>
             <h1 className="text-4xl font-bold text-white">Loan Application</h1>
             <p className="mt-2 text-sm text-white/80">Complete your application in simple steps</p>
@@ -209,10 +159,7 @@ function WizardForm() {
               </div>
               <div className="flex justify-between mt-3 flex-wrap gap-2">
                 {stepLabels.map((label, index) => (
-                  <span
-                    key={index}
-                    className={`text-xs font-semibold ${index === currentStep ? "text-white" : "text-white/40"}`}
-                  >
+                  <span key={index} className={`text-xs font-semibold ${index === currentStep ? "text-white" : "text-white/40"}`}>
                     | {label} |
                   </span>
                 ))}
@@ -228,7 +175,7 @@ function WizardForm() {
             {renderStep()}
           </div>
 
-          {/* Footer Navigation */}
+          {/* Footer */}
           <div className="flex justify-between items-center p-8 bg-[#1e1e1e] border-t border-[#2a2a2a] relative z-50">
             <button
               type="button"
