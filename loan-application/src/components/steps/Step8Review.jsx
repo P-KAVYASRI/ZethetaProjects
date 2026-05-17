@@ -234,7 +234,19 @@ export default function Step8Review({ onGoToStep }) {
   if (submitted) {
     return (
       <div style={{ textAlign: "center", padding: "60px 0" }}>
-        <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
+       <div
+  style={{
+    marginBottom: 20,
+    display: "flex",
+    justifyContent: "center",
+  }}
+>
+  <PartyPopper
+    size={70}
+    color="#FFA726"
+    strokeWidth={2.5}
+  />
+</div>
         <h2 style={{ color: "#fff", fontSize: 26, fontWeight: 700, marginBottom: 10 }}>Application Submitted!</h2>
         <p style={{ color: "#666", fontSize: 13, marginBottom: 12 }}>
           Application ID: <span style={{ color: "#1DB954", fontWeight: 600 }}>ZF-{Date.now().toString().slice(-8)}</span>
