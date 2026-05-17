@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { IndianRupee, Zap, ShieldCheck, FileCheck } from "lucide-react";
 import useAutoSave from "../../hooks/useAutoSave";
@@ -20,6 +20,19 @@ import Step6CoApplicant  from "../steps/Step6CoApplicant";
 import Step7Documents    from "../steps/Step7Documents";
 import Step8Review       from "../steps/Step8Review";
 
+/* ─── Per-step field names to validate on Next ──────────────────────────── */
+const stepFields = [
+  /* 0 */ ["loanType", "amount", "tenure", "purpose"],
+  /* 1 */ ["firstName", "lastName", "dob", "gender", "maritalStatus", "phone", "email"],
+  /* 2 */ ["pan", "aadhaar"],
+  /* 3 */ ["addressLine1", "pinCode", "city", "state", "residenceType", "yearsAtAddress"],
+  /* 4 */ ["employmentType"],
+  /* 5 */ [],   // co-applicant is optional/conditional
+  /* 6 */ [],   // documents validated inside the step
+  /* 7 */ [],   // review – no "Next"
+];
+
+/* ─── Per-step Zod schemas (used for manual trigger validation) ─────────── */
 const stepSchemas = [
   step1Schema, step2Schema, step3Schema,
   step4Schema, step5Schema, step6Schema,
@@ -40,6 +53,7 @@ const DEFAULT_VALUES = {
   pan: "", aadhaar: "", voterId: "", passport: "",
   // Step 4
   addressLine1: "", addressLine2: "", pinCode: "", city: "", state: "",
+  residenceType: "", yearsAtAddress: "",
   sameAsCurrent: true,
   permAddressLine1: "", permAddressLine2: "", permPinCode: "", permCity: "", permState: "",
   // Step 5
@@ -48,17 +62,56 @@ const DEFAULT_VALUES = {
   businessName: "", businessType: "", businessSince: "", annualTurnover: "",
   // Step 6
   hasCoApplicant: false, coName: "", coRelation: "", coPhone: "", coEmployment: "", coIncome: "",
-  // Step 7
+  // Step 7 – IMPORTANT: must NOT be in the Zod resolver so they never get wiped
   documents: {}, documentsMeta: {}, signature: null,
 };
+
+/* ─── Build a combined "always-pass" resolver that delegates to the current
+       step's schema only for the fields that belong to that step.
+       This keeps the form instance stable across step changes.          ── */
+function makeStableResolver(stepSchemasArr) {
+  return async (values, context, options) => {
+    const step = context?.currentStep ?? 0;
+    const schema = stepSchemasArr[step];
+    if (!schema) return { values, errors: {} };
+
+    // Only validate fields relevant to this step
+    const fieldsToCheck = stepFields[step];
+    if (!fieldsToCheck || fieldsToCheck.length === 0) {
+      return { values, errors: {} };
+    }
+
+    // Extract only the current step's values for validation
+    const subset = {};
+    fieldsToCheck.forEach((f) => { subset[f] = values[f]; });
+
+    try {
+      await schema.parseAsync(subset);
+      return { values, errors: {} };
+    } catch (zodError) {
+      const errors = {};
+      if (zodError?.errors) {
+        zodError.errors.forEach((e) => {
+          const path = e.path.join(".");
+          if (!errors[path]) errors[path] = { message: e.message, type: "manual" };
+        });
+      }
+      return { values, errors };
+    }
+  };
+}
+
+// Create once — this is the key: a SINGLE stable resolver reference
+const stableResolver = makeStableResolver(stepSchemas);
 
 function WizardForm() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const methods = useForm({
-    resolver: zodResolver(stepSchemas[currentStep] || step1Schema),
-    mode: "onChange",
-    shouldUnregister: false,
+    resolver: stableResolver,
+    context: { currentStep },   // pass step as context so resolver knows which schema
+    mode: "onBlur",             // validate on blur, not every keystroke
+    shouldUnregister: false,    // CRITICAL: never remove values when steps unmount
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -73,16 +126,24 @@ function WizardForm() {
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft);
         if (parsed?.formData) {
-          methods.reset({ ...DEFAULT_VALUES, ...parsed.formData, documents: {}, signature: null });
+          // Restore everything except non-serialisable fields
+          methods.reset({
+            ...DEFAULT_VALUES,
+            ...parsed.formData,
+            documents: {},   // File objects can't be serialised
+            signature: null, // restored separately below
+          });
         }
         if (parsed?.currentStep >= 0) setCurrentStep(parsed.currentStep);
       }
+      // Restore signature from its dedicated key
       const savedSig = localStorage.getItem("loanSignature");
       if (savedSig) {
-        methods.setValue("signature", savedSig, { shouldDirty: true, shouldTouch: true });
+        methods.setValue("signature", savedSig, { shouldDirty: true });
       }
     } catch (_) {}
-  }, []); // eslint-disable-line
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ── Persist signature whenever it changes ── */
   useEffect(() => {
@@ -94,9 +155,30 @@ function WizardForm() {
     return () => sub.unsubscribe();
   }, [methods]);
 
-  const nextStep     = () => { if (currentStep < totalSteps - 1) setCurrentStep(p => p + 1); };
-  const prevStep     = () => { if (currentStep > 0) setCurrentStep(p => p - 1); };
-  const goToStep     = (index) => { if (index >= 0 && index < totalSteps) setCurrentStep(index); };
+  /* ── Navigation ── */
+  const prevStep = useCallback(() => {
+    if (currentStep > 0) setCurrentStep((p) => p - 1);
+  }, [currentStep]);
+
+  const nextStep = useCallback(async () => {
+    if (currentStep >= totalSteps - 1) return;
+
+    const fields = stepFields[currentStep];
+    let valid = true;
+
+    if (fields && fields.length > 0) {
+      // Validate only the current step's fields
+      valid = await methods.trigger(fields);
+    }
+
+    if (valid) {
+      setCurrentStep((p) => p + 1);
+    }
+  }, [currentStep, totalSteps, methods]);
+
+  const goToStep = useCallback((index) => {
+    if (index >= 0 && index < totalSteps) setCurrentStep(index);
+  }, [totalSteps]);
 
   const renderStep = () => {
     switch (currentStep) {
@@ -159,7 +241,10 @@ function WizardForm() {
               </div>
               <div className="flex justify-between mt-3 flex-wrap gap-2">
                 {stepLabels.map((label, index) => (
-                  <span key={index} className={`text-xs font-semibold ${index === currentStep ? "text-white" : "text-white/40"}`}>
+                  <span
+                    key={index}
+                    className={`text-xs font-semibold ${index === currentStep ? "text-white" : "text-white/40"}`}
+                  >
                     | {label} |
                   </span>
                 ))}
@@ -194,13 +279,18 @@ function WizardForm() {
               Step <span className="text-[#1DB954] font-semibold">{currentStep + 1}</span> of {totalSteps}
             </span>
 
-            <button
-              type="button"
-              onClick={nextStep}
-              className="bg-[#1DB954] hover:bg-[#1ed760] text-black px-6 py-3 rounded-full text-sm font-semibold cursor-pointer relative z-50"
-            >
-              Next Step →
-            </button>
+            {currentStep < totalSteps - 1 ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                className="bg-[#1DB954] hover:bg-[#1ed760] text-black px-6 py-3 rounded-full text-sm font-semibold cursor-pointer relative z-50 transition-colors duration-200"
+              >
+                Next Step →
+              </button>
+            ) : (
+              /* On the last step (Review), hide the Next button */
+              <div className="w-[130px]" />
+            )}
           </div>
 
         </div>

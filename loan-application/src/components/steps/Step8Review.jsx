@@ -2,10 +2,15 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { calculateEMI } from "../../utils/emiCalculator";
 
-/* ─── Constants ─────────────────────────────────────────────────────────── */
+/* ─── Signature session-storage key (must match Step7) ─────────────────────── */
+const SIG_KEY = "loanSignatureDataUrl";
+
+/* ─── Constants ──────────────────────────────────────────────────────────── */
 const interestRates = { home: 8.5, personal: 12, car: 9, education: 10, business: 14, gold: 11 };
 const loanIcons     = { home: "🏠", personal: "👤", car: "🚗", education: "🎓", business: "💼", gold: "✨" };
 const loanLabels    = { home: "Home Loan", personal: "Personal Loan", car: "Car Loan", education: "Education Loan", business: "Business Loan", gold: "Gold Loan" };
+
+const HIGH_AMOUNT_THRESHOLD = 1000000; // ₹10 Lakhs — mirrors Step6
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 function formatINR(value) {
@@ -28,7 +33,7 @@ function val(v) {
 }
 function cap(str) {
   if (!str || str === "—") return str;
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  return str.charAt(0).toUpperCase() + str.slice(1).replace(/-/g, " ");
 }
 function tenureLabel(months) {
   if (!months) return "—";
@@ -36,6 +41,16 @@ function tenureLabel(months) {
   if (m < 12) return `${m} months`;
   if (m % 12 === 0) return `${m / 12} years`;
   return `${m} months`;
+}
+function calcAge(dob) {
+  if (!dob) return null;
+  const today = new Date();
+  const birth = new Date(dob);
+  if (isNaN(birth.getTime())) return null;
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
 }
 
 /* ─── AnimatedNumber ─────────────────────────────────────────────────────── */
@@ -99,19 +114,12 @@ function SectionHeader({ icon, title, step, onEdit }) {
         type="button"
         onClick={() => onEdit(step)}
         style={{
-          background: "transparent",
-          border: "1px solid #2a2a2a",
-          borderRadius: 8,
-          padding: "4px 12px",
-          color: "#1DB954",
-          fontSize: 11,
-          fontWeight: 600,
-          cursor: "pointer",
-          letterSpacing: "0.3px",
-          transition: "all 0.15s",
+          background: "transparent", border: "1px solid #2a2a2a", borderRadius: 8,
+          padding: "4px 12px", color: "#1DB954", fontSize: 11, fontWeight: 600,
+          cursor: "pointer", letterSpacing: "0.3px", transition: "all 0.15s",
         }}
         onMouseOver={e => { e.target.style.background = "#1DB954"; e.target.style.color = "#000"; }}
-        onMouseOut={e => { e.target.style.background = "transparent"; e.target.style.color = "#1DB954"; }}
+        onMouseOut={e =>  { e.target.style.background = "transparent"; e.target.style.color = "#1DB954"; }}
       >
         ✏ Edit
       </button>
@@ -133,9 +141,9 @@ function Divider() {
 
 /* ─── EMI Visual Bar ─────────────────────────────────────────────────────── */
 function EMIBreakdownBar({ principal, interest }) {
-  const total    = principal + interest;
-  const pPct     = total ? Math.round((principal / total) * 100) : 0;
-  const iPct     = 100 - pPct;
+  const total = principal + interest;
+  const pPct  = total ? Math.round((principal / total) * 100) : 0;
+  const iPct  = 100 - pPct;
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", height: 8, marginBottom: 8 }}>
@@ -161,9 +169,11 @@ export default function Step8Review({ onGoToStep }) {
   const { watch, reset } = useFormContext();
   const f = watch(); // entire form data — single source of truth
 
-  const documentsMeta    = f.documentsMeta || {};
-  const signaturePreview = f.signature     || null;
-  const hasDocuments     = Object.keys(documentsMeta).length > 0;
+  /* ── FIX: resolve signature from form value OR sessionStorage backup ── */
+  const signaturePreview = f.signature || sessionStorage.getItem(SIG_KEY) || null;
+
+  const documentsMeta = f.documentsMeta || {};
+  const hasDocuments  = Object.keys(documentsMeta).length > 0;
 
   const [agreeTerms,       setAgreeTerms]       = useState(false);
   const [agreeCreditCheck, setAgreeCreditCheck] = useState(false);
@@ -179,7 +189,17 @@ export default function Step8Review({ onGoToStep }) {
   const totalPayment  = emi * tenureMonths;
   const totalInterest = totalPayment - loanAmount;
 
-  /* Navigate back to a step for editing */
+  /* Co-applicant visibility — same logic as Step6 */
+  const loanType = f.loanType || "";
+  const amount   = Number(f.amount) || 0;
+  const isCoRequired = loanType === "home" || loanType === "business" || amount >= HIGH_AMOUNT_THRESHOLD;
+  const showCoApplicant = isCoRequired || f.hasCoApplicant || !!f.coName;
+
+  /* Combined income */
+  const primaryIncome   = Number(f.monthlySalary) || Number(f.annualTurnover / 12) || 0;
+  const coIncome        = Number(f.coIncome) || 0;
+  const combinedIncome  = primaryIncome + coIncome;
+
   const handleEdit = (stepIndex) => {
     if (typeof onGoToStep === "function") onGoToStep(stepIndex);
   };
@@ -195,7 +215,7 @@ export default function Step8Review({ onGoToStep }) {
       setSubmitting(false);
       try {
         const payload = { ...f };
-        delete payload.documents;
+        delete payload.documents; // File objects are not serialisable
         const existing = JSON.parse(localStorage.getItem("submittedApplications") || "[]");
         existing.push({ ...payload, submittedAt: new Date().toISOString() });
         localStorage.setItem("submittedApplications", JSON.stringify(existing));
@@ -215,7 +235,13 @@ export default function Step8Review({ onGoToStep }) {
         </p>
         <p style={{ color: "#555", fontSize: 13, marginBottom: 32 }}>We'll review your application and get back to you within 2–3 business days.</p>
         <button
-          onClick={() => { reset(); localStorage.removeItem("loanApplicationDraft"); localStorage.removeItem("loanSignature"); window.location.reload(); }}
+          onClick={() => {
+            reset();
+            sessionStorage.removeItem(SIG_KEY);
+            localStorage.removeItem("loanApplicationDraft");
+            localStorage.removeItem("loanSignature");
+            window.location.reload();
+          }}
           style={{ background: "#1DB954", color: "#000", border: "none", borderRadius: 12, padding: "13px 32px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
         >
           Start New Application
@@ -231,7 +257,9 @@ export default function Step8Review({ onGoToStep }) {
       {/* Page Header */}
       <div style={{ marginBottom: 28 }}>
         <h2 style={{ fontSize: 26, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Review & Submit</h2>
-        <p style={{ color: "#555", fontSize: 13 }}>Review all information carefully. Click <span style={{ color: "#1DB954" }}>Edit</span> on any section to go back and update.</p>
+        <p style={{ color: "#555", fontSize: 13 }}>
+          Review all information carefully. Click <span style={{ color: "#1DB954" }}>Edit</span> on any section to go back and update.
+        </p>
       </div>
 
       {/* ═══════════════════════════════════════════════
@@ -240,18 +268,12 @@ export default function Step8Review({ onGoToStep }) {
       <Card accent>
         <SectionHeader icon="💰" title="Loan Summary" step={0} onEdit={handleEdit} />
 
-        {/* Big EMI highlight */}
         <div style={{
           background: "linear-gradient(135deg, #1a2e1e 0%, #0e1e12 100%)",
-          border: "1px solid rgba(29,185,84,0.3)",
-          borderRadius: 14,
-          padding: "20px 24px",
-          marginBottom: 20,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 16,
+          border: "1px solid rgba(29,185,84,0.3)", borderRadius: 14,
+          padding: "20px 24px", marginBottom: 20,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          flexWrap: "wrap", gap: 16,
         }}>
           <div>
             <p style={{ color: "#666", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 4 }}>Monthly EMI</p>
@@ -311,8 +333,8 @@ export default function Step8Review({ onGoToStep }) {
         <Grid cols={2}>
           <InfoRow label="PAN Number"     value={val(f.pan)} accent />
           <InfoRow label="Aadhaar Number" value={f.aadhaar ? `XXXX XXXX ${String(f.aadhaar).slice(-4)}` : "—"} />
-          {f.voterId   && <InfoRow label="Voter ID"         value={val(f.voterId)} />}
-          {f.passport  && <InfoRow label="Passport Number"  value={val(f.passport)} />}
+          {f.voterId   && <InfoRow label="Voter ID"        value={val(f.voterId)} />}
+          {f.passport  && <InfoRow label="Passport Number" value={val(f.passport)} />}
         </Grid>
       </Card>
 
@@ -326,12 +348,14 @@ export default function Step8Review({ onGoToStep }) {
         <Grid cols={2}>
           <InfoRow label="Address Line 1" value={val(f.addressLine1)} fullWidth />
           {f.addressLine2 && <InfoRow label="Address Line 2" value={val(f.addressLine2)} fullWidth />}
-          <InfoRow label="PIN Code" value={val(f.pinCode)} />
-          <InfoRow label="City"     value={val(f.city)} />
-          <InfoRow label="State"    value={val(f.state)} />
+          <InfoRow label="PIN Code"        value={val(f.pinCode)} />
+          <InfoRow label="City"            value={val(f.city)} />
+          <InfoRow label="State"           value={val(f.state)} />
+          {f.residenceType && <InfoRow label="Residence Type" value={cap(val(f.residenceType))} />}
+          {f.yearsAtAddress && <InfoRow label="Years at Address" value={val(f.yearsAtAddress)} />}
         </Grid>
 
-        {f.sameAsCurrent === false && f.permAddressLine1 && (
+        {f.sameAsCurrent === false && f.permAddressLine1 ? (
           <>
             <Divider />
             <p style={{ color: "#aaa", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 12, fontWeight: 600 }}>Permanent Address</p>
@@ -343,9 +367,7 @@ export default function Step8Review({ onGoToStep }) {
               <InfoRow label="State"    value={val(f.permState)} />
             </Grid>
           </>
-        )}
-
-        {f.sameAsCurrent !== false && (
+        ) : (
           <>
             <Divider />
             <p style={{ color: "#444", fontSize: 11 }}>✓ Permanent address same as current address</p>
@@ -359,21 +381,22 @@ export default function Step8Review({ onGoToStep }) {
       <Card>
         <SectionHeader icon="💼" title="Employment Details" step={4} onEdit={handleEdit} />
 
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 20, padding: "4px 12px", marginBottom: 16 }}>
-          <span style={{ fontSize: 12 }}>{f.employmentType === "self-employed" ? "🏢" : "🏦"}</span>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          background: "#1a1a1a", border: "1px solid #2a2a2a",
+          borderRadius: 20, padding: "4px 12px", marginBottom: 16,
+        }}>
+          <span style={{ fontSize: 12 }}>
+            {f.employmentType === "salaried" ? "🏦" : f.employmentType === "business" ? "🏢" : "💼"}
+          </span>
           <span style={{ color: "#1DB954", fontSize: 11, fontWeight: 600 }}>
-            {f.employmentType === "self-employed" ? "Self-Employed" : "Salaried"}
+            {f.employmentType === "salaried" ? "Salaried"
+              : f.employmentType === "business" ? "Business Owner"
+              : "Self-Employed"}
           </span>
         </div>
 
-        {f.employmentType === "self-employed" ? (
-          <Grid cols={2}>
-            <InfoRow label="Business Name" value={val(f.businessName)} />
-            <InfoRow label="Business Type" value={cap(val(f.businessType))} />
-            <InfoRow label="In Business Since" value={val(f.businessSince)} />
-            <InfoRow label="Annual Turnover" value={f.annualTurnover ? formatINR(f.annualTurnover) : "—"} accent />
-          </Grid>
-        ) : (
+        {f.employmentType === "salaried" && (
           <Grid cols={2}>
             <InfoRow label="Company Name"   value={val(f.companyName)} />
             <InfoRow label="Designation"    value={val(f.designation)} />
@@ -383,21 +406,112 @@ export default function Step8Review({ onGoToStep }) {
             <InfoRow label="Salary Mode"    value={cap(val(f.salaryMode))} />
           </Grid>
         )}
+
+        {f.employmentType === "self-employed" && (
+          <Grid cols={2}>
+            <InfoRow label="Business Name"     value={val(f.businessNameSE || f.businessName)} />
+            <InfoRow label="Annual Turnover"   value={f.annualTurnover ? formatINR(f.annualTurnover) : "—"} accent />
+            {f.gstNumber && <InfoRow label="GST Number" value={val(f.gstNumber)} />}
+            <InfoRow label="In Business Since" value={val(f.businessSinceSE || f.businessSince)} />
+          </Grid>
+        )}
+
+        {f.employmentType === "business" && (
+          <Grid cols={2}>
+            <InfoRow label="Company / Firm"    value={val(f.businessName)} />
+            <InfoRow label="Business Structure" value={cap(val(f.businessType))} />
+            <InfoRow label="GST Number"         value={val(f.gstNumber)} accent />
+            <InfoRow label="Established Since"  value={val(f.businessSince)} />
+            <InfoRow label="Annual Turnover"    value={f.annualTurnover ? formatINR(f.annualTurnover) : "—"} accent />
+          </Grid>
+        )}
+
+        {f.existingEMIs && Number(f.existingEMIs) > 0 && (
+          <>
+            <Divider />
+            <InfoRow label="Monthly Existing EMIs" value={formatINR(f.existingEMIs)} />
+          </>
+        )}
       </Card>
 
       {/* ═══════════════════════════════════════════════
           6. CO-APPLICANT DETAILS
+          Shows when: home/business loan, amount > ₹10L,
+          or user voluntarily added one.
       ═══════════════════════════════════════════════ */}
-      {(f.hasCoApplicant || f.coName) && (
+      {showCoApplicant && (
         <Card>
           <SectionHeader icon="👥" title="Co-Applicant Details" step={5} onEdit={handleEdit} />
+
+          {/* Mandatory reason badge */}
+          {isCoRequired && (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)",
+              borderRadius: 20, padding: "3px 10px", marginBottom: 16,
+            }}>
+              <span style={{ fontSize: 11 }}>⚠</span>
+              <span style={{ color: "#fbbf24", fontSize: 11, fontWeight: 600 }}>
+                {loanType === "home"     ? "Mandatory — Home Loan"
+                  : loanType === "business" ? "Mandatory — Business Loan"
+                  : `Mandatory — Loan above ${formatINR(HIGH_AMOUNT_THRESHOLD)}`}
+              </span>
+            </div>
+          )}
+
+          {/* Core details */}
           <Grid cols={2}>
-            <InfoRow label="Full Name"   value={val(f.coName)} />
-            <InfoRow label="Relation"    value={val(f.coRelation)} />
-            <InfoRow label="Phone"       value={f.coPhone ? `+91 ${f.coPhone}` : "—"} />
-            <InfoRow label="Employment"  value={cap(val(f.coEmployment))} />
-            {f.coIncome && <InfoRow label="Monthly Income" value={formatINR(f.coIncome)} accent />}
+            <InfoRow label="Full Name"     value={val(f.coName)} />
+            <InfoRow label="Relationship"  value={val(f.coRelation)} />
+            <InfoRow label="Date of Birth" value={val(f.coDob)} />
+            <InfoRow
+              label="Age"
+              value={calcAge(f.coDob) !== null ? `${calcAge(f.coDob)} years` : "—"}
+              accent={calcAge(f.coDob) >= 21 && calcAge(f.coDob) <= 70}
+            />
+            <InfoRow label="Mobile"        value={f.coPhone ? `+91 ${f.coPhone}` : "—"} />
+            <InfoRow label="Occupation"    value={cap(val(f.coOccupation))} />
+            <InfoRow label="Monthly Income" value={f.coIncome ? formatINR(f.coIncome) : "—"} accent />
+            <InfoRow
+              label="Address"
+              value={f.coSameAddress ? "Same as primary applicant" : "Separate address"}
+            />
           </Grid>
+
+          {/* Combined income card */}
+          {combinedIncome > 0 && (
+            <>
+              <Divider />
+              <div style={{
+                background: "linear-gradient(135deg, #1a2e1e 0%, #0e1e12 100%)",
+                border: "1px solid rgba(29,185,84,0.25)",
+                borderRadius: 14, padding: "16px 20px",
+                display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16,
+              }}>
+                <div>
+                  <p style={{ color: "#555", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 6, fontWeight: 600 }}>Your Income</p>
+                  <p style={{ color: "#e0e0e0", fontSize: 15, fontWeight: 700 }}>{formatINR(primaryIncome)}</p>
+                  <p style={{ color: "#444", fontSize: 10, marginTop: 2 }}>/ month</p>
+                </div>
+                <div>
+                  <p style={{ color: "#555", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 6, fontWeight: 600 }}>Co-Applicant</p>
+                  <p style={{ color: "#1DB954", fontSize: 15, fontWeight: 700 }}>{formatINR(coIncome)}</p>
+                  <p style={{ color: "#444", fontSize: 10, marginTop: 2 }}>/ month</p>
+                </div>
+                <div>
+                  <p style={{ color: "#555", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 6, fontWeight: 600 }}>Combined</p>
+                  <p style={{ color: "#1DB954", fontSize: 17, fontWeight: 800 }}>{formatINR(combinedIncome)}</p>
+                  <p style={{ color: "#444", fontSize: 10, marginTop: 2 }}>/ month</p>
+                </div>
+              </div>
+              <p style={{ color: "#444", fontSize: 11, marginTop: 10 }}>
+                Combined eligibility ≈{" "}
+                <span style={{ color: "#1DB954", fontWeight: 600 }}>
+                  {formatINR(Math.min(combinedIncome * 60, 20000000))}
+                </span>
+              </p>
+            </>
+          )}
         </Card>
       )}
 
@@ -411,13 +525,9 @@ export default function Step8Review({ onGoToStep }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {Object.entries(documentsMeta).map(([id, meta]) => (
               <div key={id} style={{
-                background: "#141414",
-                border: "1px solid #1e1e1e",
-                borderRadius: 12,
-                padding: "11px 14px",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
+                background: "#141414", border: "1px solid #1e1e1e",
+                borderRadius: 12, padding: "11px 14px",
+                display: "flex", alignItems: "center", gap: 12,
               }}>
                 <div style={{
                   width: 38, height: 38, borderRadius: 9,
@@ -434,9 +544,7 @@ export default function Step8Review({ onGoToStep }) {
                   <p style={{ color: "#ddd", fontSize: 11, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {meta.name}
                   </p>
-                  <p style={{ color: "#1DB954", fontSize: 10, marginTop: 2 }}>
-                    ✓ {formatSize(meta.size)}
-                  </p>
+                  <p style={{ color: "#1DB954", fontSize: 10, marginTop: 2 }}>✓ {formatSize(meta.size)}</p>
                 </div>
               </div>
             ))}
@@ -450,29 +558,40 @@ export default function Step8Review({ onGoToStep }) {
 
       {/* ═══════════════════════════════════════════════
           8. DIGITAL SIGNATURE
+          FIX: reads from form value OR sessionStorage backup
       ═══════════════════════════════════════════════ */}
       <Card>
         <SectionHeader icon="✍️" title="Digital Signature" step={6} onEdit={handleEdit} />
 
         {signaturePreview ? (
           <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+            {/* Signature image — dark background matches canvas (white ink) */}
             <div style={{
-              background: "#fff",
+              background:   "#121212",
               borderRadius: 12,
-              padding: "10px 16px",
-              border: "1px solid #e0e0e0",
-              display: "inline-block",
+              padding:      "12px 20px",
+              border:       "1px solid #2a2a2a",
+              display:      "inline-flex",
+              alignItems:   "center",
+              justifyContent: "center",
+              minWidth:     200,
             }}>
               <img
                 src={signaturePreview}
                 alt="Digital signature"
-                style={{ height: 72, maxWidth: 240, objectFit: "contain", display: "block" }}
+                style={{
+                  height:     80,
+                  maxWidth:   260,
+                  objectFit:  "contain",
+                  display:    "block",
+                }}
               />
             </div>
             <div>
-              <p style={{ color: "#1DB954", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>✓ Signature verified</p>
-              <p style={{ color: "#555", fontSize: 11, lineHeight: 1.5 }}>
-                Your digital signature has been captured<br />and will be attached to the application.
+              <p style={{ color: "#1DB954", fontSize: 13, fontWeight: 700, marginBottom: 6 }}>✓ Signature verified</p>
+              <p style={{ color: "#555", fontSize: 11, lineHeight: 1.6 }}>
+                Your digital signature has been captured<br />
+                and will be attached to the application.
               </p>
             </div>
           </div>
@@ -499,10 +618,8 @@ export default function Step8Review({ onGoToStep }) {
             { label: "Total Payable",  value: formatINR(Math.round(totalPayment)),  accent: true  },
           ].map((item, i) => (
             <div key={i} style={{
-              background: "#141414",
-              border: "1px solid #1e1e1e",
-              borderRadius: 12,
-              padding: "14px 16px",
+              background: "#141414", border: "1px solid #1e1e1e",
+              borderRadius: 12, padding: "14px 16px",
             }}>
               <p style={{ color: "#555", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 6, fontWeight: 600 }}>{item.label}</p>
               <p style={{ color: item.accent ? "#1DB954" : "#e0e0e0", fontSize: 15, fontWeight: 700 }}>{item.value}</p>
@@ -558,16 +675,10 @@ export default function Step8Review({ onGoToStep }) {
           11. SUBMIT BUTTON
       ═══════════════════════════════════════════════ */}
       <div style={{ marginTop: 8 }}>
-        {/* Warning if signature or docs missing */}
         {(!signaturePreview || !hasDocuments) && (
           <div style={{
-            background: "rgba(248,113,113,0.08)",
-            border: "1px solid rgba(248,113,113,0.2)",
-            borderRadius: 12,
-            padding: "12px 16px",
-            marginBottom: 14,
-            fontSize: 12,
-            color: "#f87171",
+            background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)",
+            borderRadius: 12, padding: "12px 16px", marginBottom: 14, fontSize: 12, color: "#f87171",
           }}>
             {!signaturePreview && <p>⚠ Signature missing — go back to Step 7</p>}
             {!hasDocuments     && <p style={{ marginTop: !signaturePreview ? 4 : 0 }}>⚠ Documents missing — go back to Step 7</p>}
@@ -580,20 +691,11 @@ export default function Step8Review({ onGoToStep }) {
           disabled={submitting}
           style={{
             background: submitting ? "#156f34" : "#1DB954",
-            color: "#000",
-            border: "none",
-            borderRadius: 14,
-            padding: "17px 28px",
-            fontSize: 15,
-            fontWeight: 800,
+            color: "#000", border: "none", borderRadius: 14,
+            padding: "17px 28px", fontSize: 15, fontWeight: 800,
             cursor: submitting ? "not-allowed" : "pointer",
-            width: "100%",
-            transition: "all 0.2s",
-            letterSpacing: "0.3px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
+            width: "100%", transition: "all 0.2s", letterSpacing: "0.3px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           }}
         >
           {submitting ? (
