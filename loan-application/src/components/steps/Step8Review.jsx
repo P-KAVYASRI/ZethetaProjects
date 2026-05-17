@@ -1,6 +1,12 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { calculateEMI } from "../../utils/emiCalculator";
+import {
+  Home, User, ShieldCheck, MapPin, Briefcase, Users, FolderOpen, PenLine,
+  BarChart2, ClipboardList, IndianRupee, Car, GraduationCap, Gem,
+  Building2, FileText, Image, AlertTriangle, CheckCircle2, PartyPopper,
+  Pencil, X, Check,
+} from "lucide-react";
 
 /* ─── Signature session-storage key (must match Step7) ─────────────────────── */
 const SIG_KEY = "loanSignatureDataUrl";

@@ -3,6 +3,7 @@ import { useFormContext } from "react-hook-form";
 import {
   House, User, Car, GraduationCap, Briefcase, Gem,
   TrendingUp, Calculator, AlertCircle, Building2, BriefcaseBusiness, UserCheck,
+  Check,
 } from "lucide-react";
 
 /* ─── Loan config ──────────────────────────────────────────────────────────── */
@@ -335,7 +336,7 @@ function Step1LoanDetails() {
                 <Icon size={16} />
                 {label}
                 {employmentType === value && (
-                  <span className="ml-auto text-xs">✓</span>
+                  <Check size={13} className="ml-auto" />
                 )}
               </button>
             ))}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { MapPin, Home, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { MapPin, Home, AlertCircle, CheckCircle2, Loader2, Building2, Key, Users, Landmark } from "lucide-react";
 
 /* ─── PIN database (expanded) ──────────────────────────────────────────────── */
 const pinDatabase = {
@@ -42,10 +42,10 @@ const pinDatabase = {
 
 /* ─── Options ──────────────────────────────────────────────────────────────── */
 const residenceTypes = [
-  { value: "owned",       label: "Owned",        icon: "🏠" },
-  { value: "rented",      label: "Rented",       icon: "🔑" },
-  { value: "family",      label: "Family Owned", icon: "👨‍👩‍👧" },
-  { value: "company",     label: "Company Provided", icon: "🏢" },
+  { value: "owned",   label: "Owned",            Icon: Home      },
+  { value: "rented",  label: "Rented",            Icon: Key       },
+  { value: "family",  label: "Family Owned",      Icon: Users     },
+  { value: "company", label: "Company Provided",  Icon: Building2 },
 ];
 
 const yearsOptions = [
@@ -271,7 +271,7 @@ function Step4Address() {
           Residence type <span className="text-red-400">*</span>
         </label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {residenceTypes.map(({ value, label, icon }) => (
+          {residenceTypes.map(({ value, label, Icon }) => (
             <button
               type="button"
               key={value}
@@ -282,7 +282,7 @@ function Step4Address() {
                   : "border-[#3a3a3a] bg-[#282828] text-[#b3b3b3] hover:border-[#1DB954]/50"
                 }`}
             >
-              <span className="text-lg">{icon}</span>
+              <Icon size={20} />
               {label}
             </button>
           ))}

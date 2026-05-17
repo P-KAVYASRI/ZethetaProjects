@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useFormContext } from "react-hook-form";
 import { useDropzone } from "react-dropzone";
 import SignatureCanvas from "react-signature-canvas";
+import { FileText, FolderOpen, X, PenLine } from "lucide-react";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
@@ -67,7 +68,9 @@ function FileUploadCard({ doc, file, onUpload, onRemove }) {
 
       {file ? (
         <div className="flex items-center gap-3 mt-3 p-3 bg-[#121212] rounded-xl">
-          <div className="w-10 h-10 rounded-lg bg-[#282828] flex items-center justify-center text-lg border border-[#2a2a2a]">📄</div>
+          <div className="w-10 h-10 rounded-lg bg-[#282828] flex items-center justify-center border border-[#2a2a2a]">
+                <FileText size={18} className="text-[#1DB954]" />
+              </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-xs font-medium truncate">{file.name}</p>
             <p className="text-[#1DB954] text-xs mt-0.5">✓ Uploaded • {(file.size / 1024).toFixed(0)} KB</p>
@@ -77,7 +80,7 @@ function FileUploadCard({ doc, file, onUpload, onRemove }) {
         <button type="button"
           className="w-full mt-3 py-4 border border-dashed border-[#3a3a3a] rounded-xl text-[#b3b3b3] text-xs hover:border-[#1DB954] hover:text-[#1DB954] transition-all duration-200 flex flex-col items-center gap-1">
           <input {...getInputProps()} />
-          <span className="text-2xl">📁</span>
+          <FolderOpen size={28} className="text-[#b3b3b3] group-hover:text-[#1DB954]" />
           <span>Click to upload or drag & drop</span>
         </button>
       )}
@@ -181,19 +184,22 @@ function SignaturePad({ onSave, currentSignature }) {
     <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-5 mt-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <div>
-          <p className="text-white text-sm font-medium">
-            Digital Signature <span className="text-red-400">*</span>
-          </p>
-          <p className="text-[#5a5a5a] text-xs mt-0.5">Draw your signature in the box below</p>
+        <div className="flex items-center gap-2">
+          <PenLine size={15} className="text-[#1DB954]" />
+          <div>
+            <p className="text-white text-sm font-medium">
+              Digital Signature <span className="text-red-400">*</span>
+            </p>
+            <p className="text-[#5a5a5a] text-xs mt-0.5">Draw your signature in the box below</p>
+          </div>
         </div>
         {hasDrawn && (
           <button
             type="button"
             onClick={handleClear}
-            className="text-[#5a5a5a] hover:text-red-400 text-xs transition-colors"
+            className="flex items-center gap-1 text-[#5a5a5a] hover:text-red-400 text-xs transition-colors"
           >
-            ✕ Clear
+            <X size={12} /> Clear
           </button>
         )}
       </div>
