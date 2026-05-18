@@ -13,14 +13,22 @@ A production-grade, multi-step loan application built with React, React Hook For
 |---|---|
 | 🏠 **Step 1 — Loan Type & EMI Calculator** | `<img width="1870" height="892" alt="Screenshot 2026-05-19 003542" src="https://github.com/user-attachments/assets/9edb038f-fdf8-4779-a42e-4b1da1c83c05" />
 ` |
-| 👤 **Step 2 — Personal Information** | `screenshots/step2-personal-info.png` |
-| 🪪 **Step 3 — KYC Verification** | `screenshots/step3-kyc.png` |
-| 🗺️ **Step 4 — Address & PIN Auto-fill** | `screenshots/step4-address.png` |
-| 💼 **Step 5 — Employment & Income** | `screenshots/step5-employment.png` |
-| 👨‍👩‍👧 **Step 6 — Co-Applicant** | `screenshots/step6-co-applicant.png` |
-| 📁 **Step 7 — Documents & Signature** | `screenshots/step7-documents.png` |
-| 📋 **Step 8 — Review & Submit** | `screenshots/step8-review.png` |
-| ✅ **Success Screen** | `screenshots/success.png` |
+| 👤 **Step 2 — Personal Information** | `<img width="1867" height="886" alt="image" src="https://github.com/user-attachments/assets/a7369928-305b-41ee-be32-38892a5031e6" />
+` |
+| 🪪 **Step 3 — KYC Verification** | ` <img width="1863" height="892" alt="image" src="https://github.com/user-attachments/assets/3d3a7fe8-12cd-464b-8622-6a512749ca96" />
+` |
+| 🗺️ **Step 4 — Address & PIN Auto-fill** | `<img width="1888" height="904" alt="image" src="https://github.com/user-attachments/assets/f2805f8d-e2c3-4f4f-b19e-bd5ce8a201e3" />
+` |
+| 💼 **Step 5 — Employment & Income** | `<img width="1857" height="893" alt="image" src="https://github.com/user-attachments/assets/829c31e3-ddb5-41e6-b7e0-a33432c47d03" />
+g` |
+| 👨‍👩‍👧 **Step 6 — Co-Applicant** | `<img width="1864" height="876" alt="image" src="https://github.com/user-attachments/assets/148c6ba4-02b3-456b-a3e9-87e409b5e858" />
+` |
+| 📁 **Step 7 — Documents & Signature** | `<img width="1832" height="875" alt="image" src="https://github.com/user-attachments/assets/1fc406d4-22a4-4c89-8faa-ed35601750f5" />
+` |
+| 📋 **Step 8 — Review & Submit** | `<img width="1729" height="906" alt="image" src="https://github.com/user-attachments/assets/c5a37d3b-dfb7-4a89-9936-4ce8cf71d9f1" /> ,<img width="1723" height="888" alt="image" src="https://github.com/user-attachments/assets/665e6931-0bd3-4d15-a1ea-9ef095ae29a8" />
+` |
+| ✅ **Success Screen** | `<img width="1382" height="731" alt="image" src="https://github.com/user-attachments/assets/6bc9be6d-d63e-43c7-9857-2cf36ef25649" />
+` |
 
 ---
 
