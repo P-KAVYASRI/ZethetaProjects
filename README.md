@@ -11,7 +11,8 @@ A production-grade, multi-step loan application built with React, React Hook For
 
 | Screen | Preview |
 |---|---|
-| 🏠 **Step 1 — Loan Type & EMI Calculator** | `screenshots/step1-loan-type.png` |
+| 🏠 **Step 1 — Loan Type & EMI Calculator** | `<img width="1870" height="892" alt="Screenshot 2026-05-19 003542" src="https://github.com/user-attachments/assets/9edb038f-fdf8-4779-a42e-4b1da1c83c05" />
+` |
 | 👤 **Step 2 — Personal Information** | `screenshots/step2-personal-info.png` |
 | 🪪 **Step 3 — KYC Verification** | `screenshots/step3-kyc.png` |
 | 🗺️ **Step 4 — Address & PIN Auto-fill** | `screenshots/step4-address.png` |
