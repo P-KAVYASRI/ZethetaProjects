@@ -132,13 +132,10 @@ g` |
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/smartloan.git
-cd smartloan
+git clone [https://github.com/your-username/smartloan.git](https://github.com/P-KAVYASRI/ZethetaProjects)
+cd loan-application
 
-# 2. Install dependencies
-npm install
-
-# 3. Start the development server
+# 2. Start the development server
 npm run dev
 ```
 
