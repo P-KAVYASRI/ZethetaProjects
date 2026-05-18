@@ -216,6 +216,4 @@ Built-in lookup for 35+ Indian cities including Hyderabad, Mumbai, Delhi, Bengal
 ## 📄 License
 
 MIT — free to use and modify for personal and commercial projects.
-## 📄 License
 
-MIT — free to use and modify for personal and commercial projects.
